@@ -7,42 +7,40 @@ FLEX_OPTS=-PLatte
 BISON=bison
 BISON_OPTS=-t -pLatte
 
-OBJS=Absyn.o Lexer.o Parser.o Printer.o
+OBJS=Absyn.o Lexer.o Parser.o Printer.o SemAnalysisVisitor.o
 
 .PHONY: clean distclean
 
-all: TestLatte
+all: latc_x86
 
 clean:
-	rm -f *.o TestLatte Latte.aux Latte.log Latte.pdf Latte.dvi Latte.ps Latte
+	cd src/
+	rm -f *.o latc_x86 Latte.aux Latte.log Latte.pdf Latte.dvi Latte.ps Latte
 
-distclean: clean
-	rm -f Absyn.C Absyn.H Test.C Parser.C Parser.H Lexer.C Skeleton.C Skeleton.H Printer.C Printer.H Makefile Latte.l Latte.y Latte.tex 
+latc_x86: ${OBJS} latc_x86.o
+	@echo "Linking latc_x86..."
+	${CC} ${CCFLAGS} ${OBJS} latc_x86.o -o latc_x86
 
-TestLatte: ${OBJS} Test.o
-	@echo "Linking TestLatte..."
-	${CC} ${CCFLAGS} ${OBJS} Test.o -o TestLatte
+Absyn.o: src/Absyn.cpp src/Absyn.h
+	${CC} ${CCFLAGS} -c src/Absyn.cpp
 
-Absyn.o: Absyn.C Absyn.H
-	${CC} ${CCFLAGS} -c Absyn.C
+src/Lexer.cpp: src/Latte.l
+	${FLEX} -o src/Lexer.cpp src/Latte.l
 
-Lexer.C: Latte.l
-	${FLEX} -oLexer.C Latte.l
+src/Parser.cpp: src/Latte.y
+	${BISON} src/Latte.y -o src/Parser.cpp
 
-Parser.C: Latte.y
-	${BISON} Latte.y -o Parser.C
+Lexer.o: src/Lexer.cpp src/Parser.h
+	${CC} ${CCFLAGS} -c src/Lexer.cpp 
 
-Lexer.o: Lexer.C Parser.H
-	${CC} ${CCFLAGS} -c Lexer.C 
+Parser.o: src/Parser.cpp src/Absyn.h
+	${CC} ${CCFLAGS} -c src/Parser.cpp
 
-Parser.o: Parser.C Absyn.H
-	${CC} ${CCFLAGS} -c Parser.C
+Printer.o: src/Printer.cpp src/Printer.h src/Absyn.h
+	${CC} ${CCFLAGS} -c src/Printer.cpp
 
-Printer.o: Printer.C Printer.H Absyn.H
-	${CC} ${CCFLAGS} -c Printer.C
+SemAnalysisVisitor.o: src/SemAnalysisVisitor.cpp src/SemAnalysisVisitor.h src/Absyn.h
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/SemAnalysisVisitor.cpp
 
-Skeleton.o: Skeleton.C Skeleton.H Absyn.H
-	${CC} ${CCFLAGS} -Wno-unused-parameter -c Skeleton.C
-
-Test.o: Test.C Parser.H Printer.H Absyn.H
-	${CC} ${CCFLAGS} -c Test.C
+latc_x86.o: src/latc_x86.cpp src/Parser.h src/Printer.h src/Absyn.h src/SemAnalysisVisitor.h
+	${CC} ${CCFLAGS} -c src/latc_x86.cpp
