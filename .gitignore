@@ -1,3 +1,6 @@
+# IDE
+.vscode/*
+
 # Prerequisites
 *.d
 
@@ -27,6 +30,4 @@
 *.lib
 
 # Executables
-*.exe
-*.out
-*.app
+latc_x86
