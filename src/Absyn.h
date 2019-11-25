@@ -111,101 +111,101 @@ class Visitor
 {
 public:
     virtual ~Visitor() {}
-    virtual void visitProgram(Program *p) = 0;
-    virtual void visitTopDef(TopDef *p) = 0;
-    virtual void visitClsFld(ClsFld *p) = 0;
-    virtual void visitArg(Arg *p) = 0;
-    virtual void visitBlock(Block *p) = 0;
-    virtual void visitStmt(Stmt *p) = 0;
-    virtual void visitItem(Item *p) = 0;
-    virtual void visitStdType(StdType *p) = 0;
-    virtual void visitType(Type *p) = 0;
-    virtual void visitExpr(Expr *p) = 0;
-    virtual void visitAddOp(AddOp *p) = 0;
-    virtual void visitMulOp(MulOp *p) = 0;
-    virtual void visitRelOp(RelOp *p) = 0;
-    virtual void visitProg(Prog *p) = 0;
-    virtual void visitFnDef(FnDef *p) = 0;
-    virtual void visitClsDef(ClsDef *p) = 0;
-    virtual void visitInhClsDef(InhClsDef *p) = 0;
-    virtual void visitVarDef(VarDef *p) = 0;
-    virtual void visitMetDef(MetDef *p) = 0;
-    virtual void visitAr(Ar *p) = 0;
-    virtual void visitBlk(Blk *p) = 0;
-    virtual void visitEmpty(Empty *p) = 0;
-    virtual void visitBStmt(BStmt *p) = 0;
-    virtual void visitDecl(Decl *p) = 0;
-    virtual void visitNoInit(NoInit *p) = 0;
-    virtual void visitInit(Init *p) = 0;
-    virtual void visitAss(Ass *p) = 0;
-    virtual void visitIncr(Incr *p) = 0;
-    virtual void visitDecr(Decr *p) = 0;
-    virtual void visitRet(Ret *p) = 0;
-    virtual void visitVRet(VRet *p) = 0;
-    virtual void visitCond(Cond *p) = 0;
-    virtual void visitCondElse(CondElse *p) = 0;
-    virtual void visitWhile(While *p) = 0;
-    virtual void visitFor(For *p) = 0;
-    virtual void visitSExp(SExp *p) = 0;
-    virtual void visitInt(Int *p) = 0;
-    virtual void visitStr(Str *p) = 0;
-    virtual void visitBool(Bool *p) = 0;
-    virtual void visitVoid(Void *p) = 0;
-    virtual void visitStVarType(StVarType *p) = 0;
-    virtual void visitStArrType(StArrType *p) = 0;
-    virtual void visitVarType(VarType *p) = 0;
-    virtual void visitArrType(ArrType *p) = 0;
-    virtual void visitFun(Fun *p) = 0;
-    virtual void visitEVar(EVar *p) = 0;
-    virtual void visitEClsVar(EClsVar *p) = 0;
-    virtual void visitEArrVar(EArrVar *p) = 0;
-    virtual void visitELitInt(ELitInt *p) = 0;
-    virtual void visitEString(EString *p) = 0;
-    virtual void visitELitTrue(ELitTrue *p) = 0;
-    virtual void visitELitFalse(ELitFalse *p) = 0;
-    virtual void visitELitNull(ELitNull *p) = 0;
-    virtual void visitEApp(EApp *p) = 0;
-    virtual void visitEClsApp(EClsApp *p) = 0;
-    virtual void visitENeg(ENeg *p) = 0;
-    virtual void visitENot(ENot *p) = 0;
-    virtual void visitEVarNew(EVarNew *p) = 0;
-    virtual void visitEVStdNew(EVStdNew *p) = 0;
-    virtual void visitEArrNew(EArrNew *p) = 0;
-    virtual void visitEAStdNew(EAStdNew *p) = 0;
-    virtual void visitEVarCast(EVarCast *p) = 0;
-    virtual void visitEVStdCast(EVStdCast *p) = 0;
-    virtual void visitEArrCast(EArrCast *p) = 0;
-    virtual void visitEAStdCast(EAStdCast *p) = 0;
-    virtual void visitEMul(EMul *p) = 0;
-    virtual void visitEAdd(EAdd *p) = 0;
-    virtual void visitERel(ERel *p) = 0;
-    virtual void visitEAnd(EAnd *p) = 0;
-    virtual void visitEOr(EOr *p) = 0;
-    virtual void visitPlus(Plus *p) = 0;
-    virtual void visitMinus(Minus *p) = 0;
-    virtual void visitTimes(Times *p) = 0;
-    virtual void visitDiv(Div *p) = 0;
-    virtual void visitMod(Mod *p) = 0;
-    virtual void visitLTH(LTH *p) = 0;
-    virtual void visitLE(LE *p) = 0;
-    virtual void visitGTH(GTH *p) = 0;
-    virtual void visitGE(GE *p) = 0;
-    virtual void visitEQU(EQU *p) = 0;
-    virtual void visitNE(NE *p) = 0;
-    virtual void visitListClsFld(ListClsFld *p) = 0;
-    virtual void visitListTopDef(ListTopDef *p) = 0;
-    virtual void visitListIdent(ListIdent *p) = 0;
-    virtual void visitListArg(ListArg *p) = 0;
-    virtual void visitListStmt(ListStmt *p) = 0;
-    virtual void visitListItem(ListItem *p) = 0;
-    virtual void visitListType(ListType *p) = 0;
-    virtual void visitListExpr(ListExpr *p) = 0;
+    virtual void visitProgram(Program *p) {}
+    virtual void visitTopDef(TopDef *p) {}
+    virtual void visitClsFld(ClsFld *p) {}
+    virtual void visitArg(Arg *p) {}
+    virtual void visitBlock(Block *p) {}
+    virtual void visitStmt(Stmt *p) {}
+    virtual void visitItem(Item *p) {}
+    virtual void visitStdType(StdType *p) {}
+    virtual void visitType(Type *p) {}
+    virtual void visitExpr(Expr *p) {}
+    virtual void visitAddOp(AddOp *p) {}
+    virtual void visitMulOp(MulOp *p) {}
+    virtual void visitRelOp(RelOp *p) {}
+    virtual void visitProg(Prog *p) {}
+    virtual void visitFnDef(FnDef *p) {}
+    virtual void visitClsDef(ClsDef *p) {}
+    virtual void visitInhClsDef(InhClsDef *p) {}
+    virtual void visitVarDef(VarDef *p) {}
+    virtual void visitMetDef(MetDef *p) {}
+    virtual void visitAr(Ar *p) {}
+    virtual void visitBlk(Blk *p) {}
+    virtual void visitEmpty(Empty *p) {}
+    virtual void visitBStmt(BStmt *p) {}
+    virtual void visitDecl(Decl *p) {}
+    virtual void visitNoInit(NoInit *p) {}
+    virtual void visitInit(Init *p) {}
+    virtual void visitAss(Ass *p) {}
+    virtual void visitIncr(Incr *p) {}
+    virtual void visitDecr(Decr *p) {}
+    virtual void visitRet(Ret *p) {}
+    virtual void visitVRet(VRet *p) {}
+    virtual void visitCond(Cond *p) {}
+    virtual void visitCondElse(CondElse *p) {}
+    virtual void visitWhile(While *p) {}
+    virtual void visitFor(For *p) {}
+    virtual void visitSExp(SExp *p) {}
+    virtual void visitInt(Int *p) {}
+    virtual void visitStr(Str *p) {}
+    virtual void visitBool(Bool *p) {}
+    virtual void visitVoid(Void *p) {}
+    virtual void visitStVarType(StVarType *p) {}
+    virtual void visitStArrType(StArrType *p) {}
+    virtual void visitVarType(VarType *p) {}
+    virtual void visitArrType(ArrType *p) {}
+    virtual void visitFun(Fun *p) {}
+    virtual void visitEVar(EVar *p) {}
+    virtual void visitEClsVar(EClsVar *p) {}
+    virtual void visitEArrVar(EArrVar *p) {}
+    virtual void visitELitInt(ELitInt *p) {}
+    virtual void visitEString(EString *p) {}
+    virtual void visitELitTrue(ELitTrue *p) {}
+    virtual void visitELitFalse(ELitFalse *p) {}
+    virtual void visitELitNull(ELitNull *p) {}
+    virtual void visitEApp(EApp *p) {}
+    virtual void visitEClsApp(EClsApp *p) {}
+    virtual void visitENeg(ENeg *p) {}
+    virtual void visitENot(ENot *p) {}
+    virtual void visitEVarNew(EVarNew *p) {}
+    virtual void visitEVStdNew(EVStdNew *p) {}
+    virtual void visitEArrNew(EArrNew *p) {}
+    virtual void visitEAStdNew(EAStdNew *p) {}
+    virtual void visitEVarCast(EVarCast *p) {}
+    virtual void visitEVStdCast(EVStdCast *p) {}
+    virtual void visitEArrCast(EArrCast *p) {}
+    virtual void visitEAStdCast(EAStdCast *p) {}
+    virtual void visitEMul(EMul *p) {}
+    virtual void visitEAdd(EAdd *p) {}
+    virtual void visitERel(ERel *p) {}
+    virtual void visitEAnd(EAnd *p) {}
+    virtual void visitEOr(EOr *p) {}
+    virtual void visitPlus(Plus *p) {}
+    virtual void visitMinus(Minus *p) {}
+    virtual void visitTimes(Times *p) {}
+    virtual void visitDiv(Div *p) {}
+    virtual void visitMod(Mod *p) {}
+    virtual void visitLTH(LTH *p) {}
+    virtual void visitLE(LE *p) {}
+    virtual void visitGTH(GTH *p) {}
+    virtual void visitGE(GE *p) {}
+    virtual void visitEQU(EQU *p) {}
+    virtual void visitNE(NE *p) {}
+    virtual void visitListClsFld(ListClsFld *p) {}
+    virtual void visitListTopDef(ListTopDef *p) {}
+    virtual void visitListIdent(ListIdent *p) {}
+    virtual void visitListArg(ListArg *p) {}
+    virtual void visitListStmt(ListStmt *p) {}
+    virtual void visitListItem(ListItem *p) {}
+    virtual void visitListType(ListType *p) {}
+    virtual void visitListExpr(ListExpr *p) {}
 
-    virtual void visitInteger(Integer x) = 0;
-    virtual void visitChar(Char x) = 0;
-    virtual void visitDouble(Double x) = 0;
-    virtual void visitString(String x) = 0;
-    virtual void visitIdent(Ident x) = 0;
+    virtual void visitInteger(Integer x) {}
+    virtual void visitChar(Char x) {}
+    virtual void visitDouble(Double x) {}
+    virtual void visitString(String x) {}
+    virtual void visitIdent(Ident x) {}
 };
 
 class Visitable

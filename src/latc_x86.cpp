@@ -5,6 +5,7 @@
 #include "Printer.h"
 #include "Absyn.h"
 #include "SemAnalysisVisitor.h"
+#include "GlobalSymbolsCollector.h"
 
 
 void usage()
@@ -70,8 +71,13 @@ int main(int argc, char **argv)
             printf("%s\n\n", p->print(parse_tree));
             delete p;
 
+            GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
+            symbols_collector->visitProgram(parse_tree);
+            delete symbols_collector;
+
             SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
             sem_analysis->visitProgram(parse_tree);
+            delete sem_analysis;
         }
         return 0;
     }
