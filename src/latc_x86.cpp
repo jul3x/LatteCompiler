@@ -72,17 +72,27 @@ int main(int argc, char **argv)
             printf("%s\n\n", p->print(parse_tree));
             delete p;
 
-            GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
-            symbols_collector->visitProgram(parse_tree);
-            delete symbols_collector;
-
-            if (GlobalSymbols::getInstance().areCorrect())
+            try
             {
-                SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
-                sem_analysis->visitProgram(parse_tree);
-                delete sem_analysis;
+                GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
+                symbols_collector->visitProgram(parse_tree);
+                delete symbols_collector;
+
+                if (GlobalSymbols::getInstance().areCorrect())
+                {
+                    SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
+                    sem_analysis->visitProgram(parse_tree);
+                    delete sem_analysis;
+                }
+            }
+            catch (const std::invalid_argument& e)
+            {
+                fprintf(stderr, "ERROR\n");
+                fprintf(stderr, "%s\n", e.what());
+                return 1;
             }
         }
+
         return 0;
     }
     return 1;
