@@ -21,46 +21,65 @@ public:
     void appendFunc(const std::string &ident,
                     Type *type,
                     ListArg *args) {
-        auto it = functions_.find(ident);
-        auto it_class = classes_.find(ident);
-
-        if (it_class != classes_.end())
+        if (checkExistance(ident))
         {
-            std::string error = "Identifier " + ident + " already exists as a class name!\n";
-            throw std::invalid_argument(error.c_str());
+            functions_.emplace(std::make_pair(ident, std::make_pair(type, args)));
         }
-
-        if (it != functions_.end())
-        {
-            std::string error = "Identifier " + ident + " already exists as a function name!\n";
-            throw std::invalid_argument(error.c_str());
-        }
-
-        functions_.emplace(std::make_pair(ident, std::make_pair(type, args)));
     }
 
     void appendClass(const std::string &ident,
                      const std::string &parent) {
-        auto it_func = functions_.find(ident);
-        auto it = classes_.find(ident);
-
-        if (it_func != functions_.end())
+        if (checkExistance(ident))
         {
-            std::string error = "Identifier " + ident + " already exists as a function name!\n";
+            classes_.emplace(std::make_pair(ident, parent));
+        }
+    }
+
+    bool areCorrect() const {
+        // For now only checking if int main() exists
+        auto it = functions_.find("main");
+
+        if (it == functions_.end())
+        {
+            std::string error = "Main function definition does not exists!\n";
             throw std::invalid_argument(error.c_str());
         }
+        else
+        {
+            if (it->second.first->get() != "int")
+            {
+                std::string error = "Main function should return int!\n";
+                throw std::invalid_argument(error.c_str());
+            }
 
-        if (it != classes_.end())
+            if (!it->second.second->getTypes().empty())
+            {
+                std::string error = "Main function should not take any arguments!\n";
+                throw std::invalid_argument(error.c_str());
+            }
+        }
+
+        return true;
+    }
+
+private:
+    GlobalSymbols() = default;
+
+    bool checkExistance(const std::string &ident) {
+        if (classes_.find(ident) != classes_.end())
         {
             std::string error = "Identifier " + ident + " already exists as a class name!\n";
             throw std::invalid_argument(error.c_str());
         }
 
-        classes_.emplace(std::make_pair(ident, parent));
-    }
+        if (functions_.find(ident) != functions_.end())
+        {
+            std::string error = "Identifier " + ident + " already exists as a function name!\n";
+            throw std::invalid_argument(error.c_str());
+        }
 
-private:
-    GlobalSymbols() = default;
+        return true;
+    }
 
     std::unordered_map<std::string, FunctionType> functions_;
     std::unordered_map<std::string, ClassParent> classes_;

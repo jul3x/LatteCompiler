@@ -6,6 +6,7 @@
 #include "Absyn.h"
 #include "SemAnalysisVisitor.h"
 #include "GlobalSymbolsCollector.h"
+#include "GlobalSymbols.h"
 
 
 void usage()
@@ -75,9 +76,12 @@ int main(int argc, char **argv)
             symbols_collector->visitProgram(parse_tree);
             delete symbols_collector;
 
-            SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
-            sem_analysis->visitProgram(parse_tree);
-            delete sem_analysis;
+            if (GlobalSymbols::getInstance().areCorrect())
+            {
+                SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
+                sem_analysis->visitProgram(parse_tree);
+                delete sem_analysis;
+            }
         }
         return 0;
     }

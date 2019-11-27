@@ -239,6 +239,9 @@ class Arg : public Visitable
 {
 public:
     virtual Arg *clone() const = 0;
+
+    virtual std::string getType() const = 0;
+    virtual std::string getIdent() const = 0;
 };
 
 class Block : public Visitable
@@ -263,12 +266,16 @@ class StdType : public Visitable
 {
 public:
     virtual StdType *clone() const = 0;
+
+    virtual std::string get() const = 0;
 };
 
 class Type : public Visitable
 {
 public:
     virtual Type *clone() const = 0;
+
+    virtual std::string get() const = 0;
 };
 
 class Expr : public Visitable
@@ -402,6 +409,9 @@ public:
     virtual void accept(Visitor *v);
     virtual Ar *clone() const;
     void swap(Ar &);
+
+    virtual std::string getType() const;
+    virtual std::string getIdent() const;
 };
 
 class Blk : public Block
@@ -644,6 +654,8 @@ public:
     virtual void accept(Visitor *v);
     virtual Int *clone() const;
     void swap(Int &);
+
+    virtual std::string get() const;
 };
 
 class Str : public StdType
@@ -656,6 +668,8 @@ public:
     virtual void accept(Visitor *v);
     virtual Str *clone() const;
     void swap(Str &);
+
+    virtual std::string get() const;
 };
 
 class Bool : public StdType
@@ -668,6 +682,8 @@ public:
     virtual void accept(Visitor *v);
     virtual Bool *clone() const;
     void swap(Bool &);
+
+    virtual std::string get() const;
 };
 
 class Void : public StdType
@@ -680,6 +696,8 @@ public:
     virtual void accept(Visitor *v);
     virtual Void *clone() const;
     void swap(Void &);
+
+    virtual std::string get() const;
 };
 
 class StVarType : public Type
@@ -694,6 +712,8 @@ public:
     virtual void accept(Visitor *v);
     virtual StVarType *clone() const;
     void swap(StVarType &);
+
+    virtual std::string get() const;
 };
 
 class StArrType : public Type
@@ -708,6 +728,8 @@ public:
     virtual void accept(Visitor *v);
     virtual StArrType *clone() const;
     void swap(StArrType &);
+
+    virtual std::string get() const;
 };
 
 class VarType : public Type
@@ -722,6 +744,8 @@ public:
     virtual void accept(Visitor *v);
     virtual VarType *clone() const;
     void swap(VarType &);
+
+    virtual std::string get() const;
 };
 
 class ArrType : public Type
@@ -736,6 +760,8 @@ public:
     virtual void accept(Visitor *v);
     virtual ArrType *clone() const;
     void swap(ArrType &);
+
+    virtual std::string get() const;
 };
 
 class Fun : public Type
@@ -751,6 +777,8 @@ public:
     virtual void accept(Visitor *v);
     virtual Fun *clone() const;
     void swap(Fun &);
+
+    virtual std::string get() const;
 };
 
 class EVar : public Expr
@@ -1274,6 +1302,10 @@ class ListArg : public Visitable, public std::vector<Arg *>
 public:
     virtual void accept(Visitor *v);
     virtual ListArg *clone() const;
+
+    virtual std::vector<std::string> getTypes() const;
+    virtual std::vector<std::string> getIdents() const;
+    virtual std::string printTypes() const;
 };
 
 class ListStmt : public Visitable, public std::vector<Stmt *>
@@ -1295,6 +1327,8 @@ class ListType : public Visitable, public std::vector<Type *>
 public:
     virtual void accept(Visitor *v);
     virtual ListType *clone() const;
+
+    virtual std::string get() const;
 };
 
 class ListExpr : public Visitable, public std::vector<Expr *>
