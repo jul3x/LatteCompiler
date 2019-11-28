@@ -34,23 +34,31 @@ function print()
     fi
 }
 
-echo "BAD TESTS CHECK:"
-check "bad" 0
-ERROR_1=$?
+if [[ $# -eq 0 ]] ; then
+    echo "BAD TESTS CHECK:"
+    check "bad" 0
+    ERROR_1=$?
 
-echo -e "\n\nCORE TESTS CHECK:"
-check "good" 1
-ERROR_2=$?
+    echo -e "\n\nCORE TESTS CHECK:"
+    check "good" 1
+    ERROR_2=$?
 
-echo -e "\n\nEXTENSIONS TESTS CHECK:"
-check "extensions" 1
-ERROR_3=$?
+    echo -e "\n\nEXTENSIONS TESTS CHECK:"
+    check "extensions" 1
+    ERROR_3=$?
 
-echo -e "\nBad: "
-print $ERROR_1
+    echo -e "\nBad: "
+    print $ERROR_1
 
-echo "Core: "
-print $ERROR_2
+    echo "Core: "
+    print $ERROR_2
 
-echo "Extensions: "
-print $ERROR_3
+    echo "Extensions: "
+    print $ERROR_3
+else
+    echo $1" check:"
+    check $1 $2
+    ERROR=$?
+    echo -e "\nResult:"
+    print $ERROR
+fi
