@@ -281,7 +281,22 @@ public:
 class Expr : public Visitable
 {
 public:
+    Expr() : type_initialized_(false) {}
+
+    virtual ~Expr() {
+        if (type_initialized_)
+            delete type_;
+    }
     virtual Expr *clone() const = 0;
+
+    void setType(Type *type) {
+        type_ = type;
+    }
+
+    Type *type_;
+
+private:
+    bool type_initialized_;
 };
 
 class AddOp : public Visitable
