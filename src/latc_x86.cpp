@@ -78,6 +78,8 @@ int main(int argc, char **argv)
                 symbols_collector->visitProgram(parse_tree);
                 delete symbols_collector;
 
+                GlobalSymbols::getInstance().addLibFunctions();
+
                 if (GlobalSymbols::getInstance().areCorrect())
                 {
                     SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();

@@ -18,6 +18,23 @@ public:
         return instance;
     }
 
+    ~GlobalSymbols() {
+        delete string_args;
+        delete int_args;
+        delete empty_args;
+        delete void_type;
+        delete string_type;
+        delete int_type;
+    }
+
+    void addLibFunctions() {
+        appendFunc("printInt", void_type, int_args);
+        appendFunc("printString", void_type, string_args);
+        appendFunc("error", void_type, empty_args);
+        appendFunc("readInt", int_type, empty_args);
+        appendFunc("readString", string_type, empty_args);
+    }
+
     void appendFunc(const std::string &ident,
                     Type *type,
                     ListArg *args) {
@@ -40,7 +57,21 @@ public:
     }
 
 private:
-    GlobalSymbols() = default;
+    GlobalSymbols() {
+        void_type = new StVarType(new Void);
+        string_type = new StVarType(new Str);
+        int_type = new StVarType(new Int);
+
+        int_arg = new Ar(int_type, "x");
+        str_arg = new Ar(string_type, "x");
+
+        empty_args = new ListArg;
+        int_args = new ListArg;
+        int_args->push_back(int_arg);
+
+        string_args = new ListArg;
+        string_args->push_back(str_arg);
+    }
 
     inline bool checkExistance(const std::string &ident) {
         if (classes_.find(ident) != classes_.end())
@@ -151,6 +182,17 @@ private:
 
     std::unordered_map<std::string, FunctionType> functions_;
     std::unordered_map<std::string, ClassParent> classes_;
+
+    Type *void_type;
+    Type *string_type;
+    Type *int_type;
+
+    Arg *int_arg;
+    Arg *str_arg;
+
+    ListArg *empty_args;
+    ListArg *int_args;
+    ListArg *string_args;
 };
 
 #endif
