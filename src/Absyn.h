@@ -260,6 +260,8 @@ class Item : public Visitable
 {
 public:
     virtual Item *clone() const = 0;
+
+    std::string type_;
 };
 
 class StdType : public Visitable
@@ -281,22 +283,9 @@ public:
 class Expr : public Visitable
 {
 public:
-    Expr() : type_initialized_(false) {}
-
-    virtual ~Expr() {
-        if (type_initialized_)
-            delete type_;
-    }
     virtual Expr *clone() const = 0;
 
-    void setType(Type *type) {
-        type_ = type;
-    }
-
-    Type *type_;
-
-private:
-    bool type_initialized_;
+    std::string type_;
 };
 
 class AddOp : public Visitable
@@ -1335,6 +1324,8 @@ class ListItem : public Visitable, public std::vector<Item *>
 public:
     virtual void accept(Visitor *v);
     virtual ListItem *clone() const;
+
+    std::string type_;
 };
 
 class ListType : public Visitable, public std::vector<Type *>

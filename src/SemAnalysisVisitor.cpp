@@ -1,4 +1,6 @@
 #include "SemAnalysisVisitor.h"
+#include "LocalSymbols.h"
+#include "GlobalSymbols.h"
 
 
 void SemAnalysisVisitor::visitProgram(Program *t)
@@ -22,53 +24,55 @@ void SemAnalysisVisitor::visitRelOp(RelOp *t) {}     //abstract class
 void SemAnalysisVisitor::visitProg(Prog *prog)
 {
     /* Code For Prog Goes Here */
-
     prog->listtopdef_->accept(this);
 }
 
 void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 {
     /* Code For FnDef Goes Here */
+    LocalSymbols::getInstance().enterBlock();
 
     fn_def->type_->accept(this);
     visitIdent(fn_def->ident_);
     fn_def->listarg_->accept(this);
     fn_def->block_->accept(this);
+
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitClsDef(ClsDef *cls_def)
 {
     /* Code For ClsDef Goes Here */
 
-    visitIdent(cls_def->ident_);
-    cls_def->listclsfld_->accept(this);
+    //visitIdent(cls_def->ident_);
+    //cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
     /* Code For InhClsDef Goes Here */
 
-    visitIdent(inh_cls_def->ident_1);
-    visitIdent(inh_cls_def->ident_2);
-    inh_cls_def->listclsfld_->accept(this);
+    //visitIdent(inh_cls_def->ident_1);
+    //visitIdent(inh_cls_def->ident_2);
+    //inh_cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitVarDef(VarDef *var_def)
 {
     /* Code For VarDef Goes Here */
 
-    var_def->type_->accept(this);
-    var_def->listident_->accept(this);
+    //var_def->type_->accept(this);
+    //var_def->listident_->accept(this);
 }
 
 void SemAnalysisVisitor::visitMetDef(MetDef *met_def)
 {
     /* Code For MetDef Goes Here */
 
-    met_def->type_->accept(this);
-    visitIdent(met_def->ident_);
-    met_def->listarg_->accept(this);
-    met_def->block_->accept(this);
+    //met_def->type_->accept(this);
+    //visitIdent(met_def->ident_);
+    //met_def->listarg_->accept(this);
+    //met_def->block_->accept(this);
 }
 
 void SemAnalysisVisitor::visitAr(Ar *ar)
@@ -77,13 +81,16 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
 
     ar->type_->accept(this);
     visitIdent(ar->ident_);
+
+    LocalSymbols::getInstance().append(ar->ident_, ar->type_->get());
 }
 
 void SemAnalysisVisitor::visitBlk(Blk *blk)
 {
     /* Code For Blk Goes Here */
-
+    LocalSymbols::getInstance().enterBlock();
     blk->liststmt_->accept(this);
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitEmpty(Empty *empty)
@@ -101,8 +108,10 @@ void SemAnalysisVisitor::visitBStmt(BStmt *b_stmt)
 void SemAnalysisVisitor::visitDecl(Decl *decl)
 {
     /* Code For Decl Goes Here */
-
     decl->type_->accept(this);
+
+    decl->listitem_->type_ = decl->type_->get();
+
     decl->listitem_->accept(this);
 }
 
@@ -168,11 +177,16 @@ void SemAnalysisVisitor::visitWhile(While *while_)
 void SemAnalysisVisitor::visitFor(For *for_)
 {
     /* Code For For Goes Here */
+    LocalSymbols::getInstance().enterBlock();
 
     for_->type_->accept(this);
     visitIdent(for_->ident_);
+    LocalSymbols::getInstance().append(for_->ident_, for_->type_->get());
+
     for_->expr_->accept(this);
     for_->stmt_->accept(this);
+
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitSExp(SExp *s_exp)
@@ -185,15 +199,13 @@ void SemAnalysisVisitor::visitSExp(SExp *s_exp)
 void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
 {
     /* Code For NoInit Goes Here */
-
-    visitIdent(no_init->ident_);
+    LocalSymbols::getInstance().append(no_init->ident_, no_init->type_);
 }
 
 void SemAnalysisVisitor::visitInit(Init *init)
 {
     /* Code For Init Goes Here */
-
-    visitIdent(init->ident_);
+    LocalSymbols::getInstance().append(init->ident_, init->type_);
     init->expr_->accept(this);
 }
 
@@ -256,6 +268,7 @@ void SemAnalysisVisitor::visitFun(Fun *fun)
 void SemAnalysisVisitor::visitEVar(EVar *e_var)
 {
     /* Code For EVar Goes Here */
+    e_var->type_ = LocalSymbols::getInstance().getSymbolType(e_var->ident_);
 
     visitIdent(e_var->ident_);
 }
@@ -308,6 +321,7 @@ void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
 {
     /* Code For EApp Goes Here */
+    std::string ret_type = GlobalSymbols::getInstance().getFunctionType(e_app->ident_);
 
     visitIdent(e_app->ident_);
     e_app->listexpr_->accept(this);
@@ -540,6 +554,7 @@ void SemAnalysisVisitor::visitListItem(ListItem *list_item)
 {
     for (ListItem::iterator i = list_item->begin(); i != list_item->end(); ++i)
     {
+        (*i)->type_ = list_item->type_;
         (*i)->accept(this);
     }
 }

@@ -75,13 +75,13 @@ int main(int argc, char **argv)
             try
             {
                 GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
+                GlobalSymbols::getInstance().addLibFunctions();
                 symbols_collector->visitProgram(parse_tree);
                 delete symbols_collector;
 
-                GlobalSymbols::getInstance().addLibFunctions();
-
                 if (GlobalSymbols::getInstance().areCorrect())
                 {
+                    fprintf(stderr, "GlobalSymbols are correct!\n");
                     SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
                     sem_analysis->visitProgram(parse_tree);
                     delete sem_analysis;
