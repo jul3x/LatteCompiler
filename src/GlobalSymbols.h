@@ -70,6 +70,21 @@ public:
         }
     }
 
+    ListArg* getFunctionArgs(const std::string &ident) const {
+        auto function = functions_.find(ident);
+
+        if (function != functions_.end())
+        {
+            return function->second.second;
+        }
+        else
+        {
+            std::string error = "Identifier " + ident + " does not exists as a function name!\n";
+            throw std::invalid_argument(error.c_str());
+        }
+    }
+
+
 private:
     GlobalSymbols() {
         void_type = new StVarType(new Void);
