@@ -1,0 +1,7 @@
+// Author: Julian Prolejko 420564
+// void variable type
+
+int main() {
+   void[] x;
+   return 0;
+}

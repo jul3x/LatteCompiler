@@ -82,6 +82,12 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
     ar->type_->accept(this);
     visitIdent(ar->ident_);
 
+    if (ar->type_->get().substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
     LocalSymbols::getInstance().append(ar->ident_, ar->type_->get());
 }
 
@@ -239,6 +245,13 @@ void SemAnalysisVisitor::visitFor(For *for_)
 
     for_->type_->accept(this);
     visitIdent(for_->ident_);
+
+    if (for_->type_->get().substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
     LocalSymbols::getInstance().append(for_->ident_, for_->type_->get());
 
     for_->expr_->accept(this);
@@ -265,6 +278,12 @@ void SemAnalysisVisitor::visitSExp(SExp *s_exp)
 void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
 {
     /* Code For NoInit Goes Here */
+    if (no_init->type_.substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
     LocalSymbols::getInstance().append(no_init->ident_, no_init->type_);
 }
 
@@ -272,6 +291,12 @@ void SemAnalysisVisitor::visitInit(Init *init)
 {
     /* Code For Init Goes Here */
     init->expr_->accept(this);
+
+    if (init->type_.substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 
     if (init->expr_->type_ != init->type_)
     {
@@ -475,7 +500,7 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
     e_neg->expr_->accept(this);
     e_neg->type_ = "int";
 
-    if (e_neg->type_ != "int")
+    if (e_neg->expr_->type_ != "int")
     {
         std::string error = "Negation operation can be performed only using int parameter!\n";
         throw std::invalid_argument(error.c_str());
@@ -491,7 +516,7 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
 
     e_not->type_ = "boolean";
 
-    if (e_not->type_ != "boolean")
+    if (e_not->expr_->type_ != "boolean")
     {
         std::string error = "Not operation can be performed only using boolean parameter!\n";
         throw std::invalid_argument(error.c_str());
