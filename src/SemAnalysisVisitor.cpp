@@ -128,6 +128,12 @@ void SemAnalysisVisitor::visitAss(Ass *ass)
             " does not match rvalue of type: " + ass->expr_2->type_ + "!\n";
         throw std::invalid_argument(error.c_str());
     }
+
+    if (!ass->expr_1->is_lvalue_)
+    {
+        std::string error = "Assignment can be done only for appropriate lvalues!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 }
 
 void SemAnalysisVisitor::visitIncr(Incr *incr)
@@ -141,6 +147,12 @@ void SemAnalysisVisitor::visitIncr(Incr *incr)
         std::string error = "Only int variables can be incremented!\n";
         throw std::invalid_argument(error.c_str());
     }
+
+    if (!incr->expr_->is_lvalue_)
+    {
+        std::string error = "Incrementing can be done only for appropriate lvalues!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 }
 
 void SemAnalysisVisitor::visitDecr(Decr *decr)
@@ -152,6 +164,12 @@ void SemAnalysisVisitor::visitDecr(Decr *decr)
     if (decr->expr_->type_ != "int")
     {
         std::string error = "Only int variables can be decremented!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!decr->expr_->is_lvalue_)
+    {
+        std::string error = "Decrementing can be done only for appropriate lvalues!\n";
         throw std::invalid_argument(error.c_str());
     }
 }
@@ -253,7 +271,6 @@ void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
 void SemAnalysisVisitor::visitInit(Init *init)
 {
     /* Code For Init Goes Here */
-    LocalSymbols::getInstance().append(init->ident_, init->type_);
     init->expr_->accept(this);
 
     if (init->expr_->type_ != init->type_)
@@ -263,6 +280,8 @@ void SemAnalysisVisitor::visitInit(Init *init)
             " of declared variable of name " + init->ident_ + "!\n";
         throw std::invalid_argument(error.c_str());
     }
+
+    LocalSymbols::getInstance().append(init->ident_, init->type_);
 }
 
 void SemAnalysisVisitor::visitInt(Int *int_)
@@ -327,6 +346,7 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
     e_var->type_ = LocalSymbols::getInstance().getSymbolType(e_var->ident_);
 
     visitIdent(e_var->ident_);
+    e_var->is_lvalue_ = true;
 }
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
@@ -350,6 +370,12 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
         throw std::invalid_argument(error.c_str());
     }
 
+    if (!e_arr_var->expr_1->is_lvalue_)
+    {
+        std::string error = "[] operation can be performed only on lvalue array types!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
     if (e_arr_var->expr_2->type_ != "int")
     {
         std::string error = "[] operation can be performed only using int parameter!\n";
@@ -357,6 +383,7 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
     }
 
     e_arr_var->type_ = e_arr_var->expr_1->type_.substr(0, e_arr_var->expr_1->type_.length() - 2);
+    e_arr_var->is_lvalue_ = true;
 }
 
 void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
@@ -366,6 +393,7 @@ void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
     visitInteger(e_lit_int->integer_);
 
     e_lit_int->type_ = "int";
+    e_lit_int->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEString(EString *e_string)
@@ -375,24 +403,29 @@ void SemAnalysisVisitor::visitEString(EString *e_string)
     visitString(e_string->string_);
 
     e_string->type_ = "string";
+    e_string->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
 {
     /* Code For ELitTrue Goes Here */
     e_lit_true->type_ = "boolean";
+    e_lit_true->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
 {
     /* Code For ELitFalse Goes Here */
     e_lit_false->type_ = "boolean";
+    e_lit_false->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
 {
     /* Code For ELitNull Goes Here */
     e_lit_null->type_ = "void";
+    e_lit_null->is_lvalue_ = false;
+
 }
 
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
@@ -422,15 +455,18 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
         throw std::invalid_argument(error.c_str());
         }
     }
+
+    // TODO It depends on what function returns!
+    e_app->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
 {
     /* Code For EClsApp Goes Here */
 
-    e_cls_app->expr_->accept(this);
-    visitIdent(e_cls_app->ident_);
-    e_cls_app->listexpr_->accept(this);
+    //e_cls_app->expr_->accept(this);
+    //visitIdent(e_cls_app->ident_);
+    //e_cls_app->listexpr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
@@ -444,6 +480,8 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
         std::string error = "Negation operation can be performed only using int parameter!\n";
         throw std::invalid_argument(error.c_str());
     }
+
+    e_neg->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitENot(ENot *e_not)
@@ -458,6 +496,8 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
         std::string error = "Not operation can be performed only using boolean parameter!\n";
         throw std::invalid_argument(error.c_str());
     }
+
+    e_not->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarNew(EVarNew *e_var_new)
@@ -473,6 +513,8 @@ void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
 
     ev_std_new->stdtype_->accept(this);
     ev_std_new->type_ = ev_std_new->stdtype_->get();
+
+    ev_std_new->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEArrNew(EArrNew *e_arr_new)
@@ -496,7 +538,8 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
         throw std::invalid_argument(error.c_str());
     }
 
-    ea_std_new->type_ = ea_std_new->stdtype_->get();
+    ea_std_new->type_ = ea_std_new->stdtype_->get() + "[]";
+    ea_std_new->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarCast(EVarCast *e_var_cast)
@@ -547,6 +590,8 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     }
 
     e_mul->type_ = "int";
+
+    e_mul->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
@@ -583,6 +628,8 @@ void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
             throw std::invalid_argument(error.c_str());
         }
     }
+
+    e_add->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitERel(ERel *e_rel)
@@ -626,6 +673,7 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
     }
 
     e_rel->type_ = "boolean";
+    e_rel->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
@@ -643,6 +691,7 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
     }
 
     e_and->type_ = "boolean";
+    e_and->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitEOr(EOr *e_or)
@@ -660,6 +709,7 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
     }
 
     e_or->type_ = "boolean";
+    e_or->is_lvalue_ = false;
 }
 
 void SemAnalysisVisitor::visitPlus(Plus *plus)

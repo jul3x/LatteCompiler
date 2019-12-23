@@ -283,9 +283,12 @@ public:
 class Expr : public Visitable
 {
 public:
+    Expr() : is_lvalue_(false) {}
+
     virtual Expr *clone() const = 0;
 
     std::string type_;
+    bool is_lvalue_;
 };
 
 class AddOp : public Visitable
