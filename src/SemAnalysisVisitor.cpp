@@ -1,6 +1,7 @@
 #include "SemAnalysisVisitor.h"
 #include "LocalSymbols.h"
 #include "GlobalSymbols.h"
+#include "ControlFlow.h"
 
 
 void SemAnalysisVisitor::visitProgram(Program *t)
@@ -31,6 +32,8 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 {
     /* Code For FnDef Goes Here */
     LocalSymbols::getInstance().enterBlock();
+
+    ControlFlow::getInstance().newFunction();
 
     fn_def->type_->accept(this);
     visitIdent(fn_def->ident_);
@@ -204,7 +207,20 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
         throw std::invalid_argument(error.c_str());
     }
 
+    auto parent = ControlFlow::getInstance().getCurrentBlock();
+
+    ControlFlow::getInstance().addBlock();
+
+    auto if_block = ControlFlow::getInstance().getCurrentBlock();
+    ControlFlow::getInstance().addChild(parent, if_block);
+
     cond->stmt_->accept(this);
+
+    ControlFlow::getInstance().addBlock();
+    auto after_if = ControlFlow::getInstance().getCurrentBlock();
+
+    ControlFlow::getInstance().addChild(parent, after_if);
+    ControlFlow::getInstance().addChild(if_block, after_if);
 }
 
 void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
@@ -219,13 +235,35 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
         throw std::invalid_argument(error.c_str());
     }
 
+    auto parent = ControlFlow::getInstance().getCurrentBlock();
+
+    ControlFlow::getInstance().addBlock();
+
+    auto if_block = ControlFlow::getInstance().getCurrentBlock();
+    ControlFlow::getInstance().addChild(parent, if_block);
+
     cond_else->stmt_1->accept(this);
+
+    ControlFlow::getInstance().addBlock();
+
+    auto else_block = ControlFlow::getInstance().getCurrentBlock();
+    ControlFlow::getInstance().addChild(parent, else_block);
+
     cond_else->stmt_2->accept(this);
+
+    ControlFlow::getInstance().addBlock();
+
+    auto after_if = ControlFlow::getInstance().getCurrentBlock();
+
+    ControlFlow::getInstance().addChild(if_block, after_if);
+    ControlFlow::getInstance().addChild(else_block, after_if);
 }
 
 void SemAnalysisVisitor::visitWhile(While *while_)
 {
     /* Code For While Goes Here */
+
+    // Lets treat while as normal statement without any jumps - for now it does not matter
 
     while_->expr_->accept(this);
 

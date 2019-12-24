@@ -7,6 +7,7 @@
 #include "SemAnalysisVisitor.h"
 #include "GlobalSymbolsCollector.h"
 #include "GlobalSymbols.h"
+#include "ControlFlow.h"
 
 
 void usage()
@@ -86,6 +87,8 @@ int main(int argc, char **argv)
                     sem_analysis->visitProgram(parse_tree);
                     delete sem_analysis;
                 }
+
+                ControlFlow::getInstance().prettyPrint();
             }
             catch (const std::invalid_argument& e)
             {
