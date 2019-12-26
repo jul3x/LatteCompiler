@@ -23,7 +23,7 @@ public:
         if (checkExistance(symbols_.back(), ident).empty())
         {
             symbols_.back().emplace(std::make_pair(ident, type));
-            fprintf(stderr, "Declaring %s as %s...\n", ident.c_str(), type.c_str());
+            //fprintf(stderr, "Declaring %s as %s...\n", ident.c_str(), type.c_str());
         }
         else
         {
@@ -34,12 +34,12 @@ public:
 
     void enterBlock() {
         symbols_.emplace_back();
-        fprintf(stderr, "Entering block.\n");
+        //fprintf(stderr, "Entering block.\n");
     }
 
     void exitBlock() {
         symbols_.pop_back();
-        fprintf(stderr, "Exiting block.\n");
+        //fprintf(stderr, "Exiting block.\n");
     }
 
     const std::string& getSymbolType(const std::string &ident) const {

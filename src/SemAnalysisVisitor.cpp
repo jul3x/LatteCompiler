@@ -212,15 +212,19 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
     ControlFlow::getInstance().addBlock();
 
     auto if_block = ControlFlow::getInstance().getCurrentBlock();
+
     ControlFlow::getInstance().addChild(parent, if_block);
 
     cond->stmt_->accept(this);
+
+    auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
 
     ControlFlow::getInstance().addBlock();
     auto after_if = ControlFlow::getInstance().getCurrentBlock();
 
     ControlFlow::getInstance().addChild(parent, after_if);
-    ControlFlow::getInstance().addChild(if_block, after_if);
+    ControlFlow::getInstance().addChild(parent_from_if, after_if);
+
 }
 
 void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
@@ -236,13 +240,14 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
     }
 
     auto parent = ControlFlow::getInstance().getCurrentBlock();
-
     ControlFlow::getInstance().addBlock();
 
     auto if_block = ControlFlow::getInstance().getCurrentBlock();
     ControlFlow::getInstance().addChild(parent, if_block);
 
     cond_else->stmt_1->accept(this);
+
+    auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
 
     ControlFlow::getInstance().addBlock();
 
@@ -251,12 +256,15 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
 
     cond_else->stmt_2->accept(this);
 
+    auto parent_from_else = ControlFlow::getInstance().getCurrentBlock();
+
     ControlFlow::getInstance().addBlock();
 
     auto after_if = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addChild(if_block, after_if);
-    ControlFlow::getInstance().addChild(else_block, after_if);
+    ControlFlow::getInstance().addChild(parent_from_if, after_if);
+    ControlFlow::getInstance().addChild(parent_from_else, after_if);
+
 }
 
 void SemAnalysisVisitor::visitWhile(While *while_)

@@ -2,6 +2,7 @@
 #define CONTROLFLOW_HEADER
 
 #include <vector>
+#include <unordered_set>
 #include <cstdio>
 
 
@@ -27,7 +28,7 @@ public:
     }
 
     void addChild(int block, int child) {
-        simple_blocks_.back().at(block).push_back(child);
+        simple_blocks_.back().at(block).emplace(child);
     }
 
     void prettyPrint() {
@@ -54,8 +55,8 @@ public:
 private:
     ControlFlow() = default;
 
-    // Functions vector -> vertices vector -> childs vector
-    std::vector<std::vector<std::vector<int>>> simple_blocks_;
+    // Functions vector -> vertices vector -> childs set
+    std::vector<std::vector<std::unordered_set<int>>> simple_blocks_;
 
 };
 
