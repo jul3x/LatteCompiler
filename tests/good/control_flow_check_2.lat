@@ -9,6 +9,10 @@ int main() {
 
         return 1;
     }
+    else
+    {
+        return 1;
+    }
 
     if (false)
     {
@@ -21,5 +25,4 @@ int main() {
         }
     }
 
-    return 0;
 }

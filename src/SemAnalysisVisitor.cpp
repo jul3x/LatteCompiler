@@ -217,32 +217,40 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
 
     cond->expr_->accept(this);
 
-    fprintf(stderr, "If: %d %d\n", cond->expr_->is_always_false_, cond->expr_->is_always_true_);
-
     if (cond->expr_->type_ != "boolean")
     {
         std::string error = "Condition in if statement must be of boolean type!\n";
         throw std::invalid_argument(error.c_str());
     }
 
-    auto parent = ControlFlow::getInstance().getCurrentBlock();
+    if (!cond->expr_->is_always_false_ && !cond->expr_->is_always_true_)
+    {
+        auto parent = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addBlock();
+        ControlFlow::getInstance().addBlock();
 
-    auto if_block = ControlFlow::getInstance().getCurrentBlock();
+        auto if_block = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addChild(parent, if_block);
+        ControlFlow::getInstance().addChild(parent, if_block);
 
-    cond->stmt_->accept(this);
+        cond->stmt_->accept(this);
 
-    auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
+        auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addBlock();
-    auto after_if = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addBlock();
+        auto after_if = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addChild(parent, after_if);
-    ControlFlow::getInstance().addChild(parent_from_if, after_if);
-
+        ControlFlow::getInstance().addChild(parent, after_if);
+        ControlFlow::getInstance().addChild(parent_from_if, after_if);
+    }
+    else if (cond->expr_->is_always_true_)
+    {
+        cond->stmt_->accept(this);
+    }
+    else if (cond->expr_->is_always_false_)
+    {
+        // TODO remove statements
+    }
 }
 
 void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
@@ -251,35 +259,45 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
 
     cond_else->expr_->accept(this);
 
-    fprintf(stderr, "If: %d %d\n", cond_else->expr_->is_always_false_, cond_else->expr_->is_always_true_);
-
     if (cond_else->expr_->type_ != "boolean")
     {
         std::string error = "Condition in if statement must be of boolean type!\n";
         throw std::invalid_argument(error.c_str());
     }
 
-    auto parent = ControlFlow::getInstance().getCurrentBlock();
-    ControlFlow::getInstance().addBlock();
+    if (!cond_else->expr_->is_always_false_ && !cond_else->expr_->is_always_true_)
+    {
+        auto parent = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addBlock();
 
-    auto if_block = ControlFlow::getInstance().getCurrentBlock();
-    ControlFlow::getInstance().addChild(parent, if_block);
+        auto if_block = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addChild(parent, if_block);
 
-    cond_else->stmt_1->accept(this);
+        cond_else->stmt_1->accept(this);
 
-    auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
+        auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addBlock();
+        ControlFlow::getInstance().addBlock();
 
-    auto else_block = ControlFlow::getInstance().getCurrentBlock();
-    ControlFlow::getInstance().addChild(parent, else_block);
+        auto else_block = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addChild(parent, else_block);
 
-    cond_else->stmt_2->accept(this);
+        cond_else->stmt_2->accept(this);
 
-    auto parent_from_else = ControlFlow::getInstance().getCurrentBlock();
+        auto parent_from_else = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addVirtualBlock(parent_from_else, parent_from_if);
+        ControlFlow::getInstance().addVirtualBlock(parent_from_else, parent_from_if);
+    }
+    else if (cond_else->expr_->is_always_true_)
+    {
+        cond_else->stmt_1->accept(this);
+    }
+    else if (cond_else->expr_->is_always_false_)
+    {
+        cond_else->stmt_2->accept(this);
+    }
 
+    // TODO remove other statements
 }
 
 void SemAnalysisVisitor::visitWhile(While *while_)
