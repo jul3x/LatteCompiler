@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_set>
 #include <cstdio>
+#include <algorithm>
 
 
 class ControlFlow
@@ -18,12 +19,14 @@ public:
         simple_blocks_.emplace_back();
         ret_types_.emplace_back(ret_type);
         termination_.emplace_back();
+        reachable_.emplace_back();
         addBlock();
     }
 
     void addBlock() {
         simple_blocks_.back().emplace_back();
         termination_.back().emplace_back(false);
+        reachable_.back().emplace_back(false);
         was_if_ = false;
     }
 
@@ -91,16 +94,17 @@ public:
 
     bool checkFlow() {
         int i = 0, j = 0;
-        for (const auto &fun : simple_blocks_)
+        for (auto &fun : simple_blocks_)
         {
+            setNonReachablePoints(i);
             j = 0;
 
             for (const auto &vertex : fun)
             {
                 if (ret_types_.at(i) != "void" &&
-                    vertex.empty() && !termination_.at(i).at(j))
+                    vertex.empty() && !termination_.at(i).at(j) &&
+                    reachable_.at(i).at(j))
                 {
-                    fprintf(stderr, "i: %d j: %d", i, j);
                     throw std::invalid_argument("Not every path in control flow graph"
                                                 " is properly terminated by return instruction!\n");
                 }
@@ -117,6 +121,16 @@ public:
 private:
     ControlFlow() = default;
 
+    void setNonReachablePoints(int fun) {
+        reachable_.at(fun).at(0) = true;
+
+        for (const auto &vertex : simple_blocks_.at(fun))
+        {
+            for (const auto &child : vertex)
+                reachable_.at(fun).at(child) = true;
+        }
+    }
+
     // Functions vector -> vertices vector -> childs set
     std::vector<std::vector<std::unordered_set<int>>> simple_blocks_;
 
@@ -125,6 +139,9 @@ private:
 
     // True if block in function was terminated by return
     std::vector<std::vector<bool>> termination_;
+
+    // True if block in function is reachable
+    std::vector<std::vector<bool>> reachable_;
 
     int virtual_p1_, virtual_p2_;
     bool was_if_;

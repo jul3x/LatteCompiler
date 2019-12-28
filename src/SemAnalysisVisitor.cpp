@@ -249,7 +249,7 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
     }
     else if (cond->expr_->is_always_false_)
     {
-        // TODO remove statements
+        delete cond->stmt_;
     }
 }
 
@@ -291,10 +291,12 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
     else if (cond_else->expr_->is_always_true_)
     {
         cond_else->stmt_1->accept(this);
+        delete cond_else->stmt_2;
     }
     else if (cond_else->expr_->is_always_false_)
     {
         cond_else->stmt_2->accept(this);
+        delete cond_else->stmt_1;
     }
 
     // TODO remove other statements
