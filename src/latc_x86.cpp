@@ -87,8 +87,8 @@ int main(int argc, char **argv)
                     sem_analysis->visitProgram(parse_tree);
                     delete sem_analysis;
                 }
-
                 ControlFlow::getInstance().prettyPrint();
+                ControlFlow::getInstance().checkFlow();
             }
             catch (const std::invalid_argument& e)
             {

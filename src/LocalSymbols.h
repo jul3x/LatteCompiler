@@ -43,7 +43,7 @@ public:
     }
 
     const std::string& getSymbolType(const std::string &ident) const {
-        fprintf(stderr, "Checking %s..\n", ident.c_str());
+        // fprintf(stderr, "Checking %s..\n", ident.c_str());
 
         for (auto it = symbols_.rbegin(); it != symbols_.rend(); ++it)
         {

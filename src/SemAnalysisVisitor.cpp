@@ -33,7 +33,7 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
     /* Code For FnDef Goes Here */
     LocalSymbols::getInstance().enterBlock();
 
-    ControlFlow::getInstance().newFunction();
+    ControlFlow::getInstance().newFunction(fn_def->type_->get());
 
     fn_def->type_->accept(this);
 
@@ -124,7 +124,7 @@ void SemAnalysisVisitor::visitDecl(Decl *decl)
     /* Code For Decl Goes Here */
     decl->type_->accept(this);
 
-    GlobalSymbols::getInstance().checkType(ar->type_->get());
+    GlobalSymbols::getInstance().checkType(decl->type_->get());
 
     decl->listitem_->type_ = decl->type_->get();
 
@@ -195,11 +195,20 @@ void SemAnalysisVisitor::visitRet(Ret *ret)
     /* Code For Ret Goes Here */
     // TODO Check if appropriate return type
     ret->expr_->accept(this);
+
+    if (ret->expr_->type_ == "void")
+    {
+        throw std::invalid_argument("Return with value can be used only for non-void return types!\n");
+    }
+
+    ControlFlow::getInstance().setTermination(ret->expr_->type_);
 }
 
 void SemAnalysisVisitor::visitVRet(VRet *v_ret)
 {
     /* Code For VRet Goes Here */
+
+    ControlFlow::getInstance().setTermination("void");
 }
 
 void SemAnalysisVisitor::visitCond(Cond *cond)
@@ -265,12 +274,7 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
 
     auto parent_from_else = ControlFlow::getInstance().getCurrentBlock();
 
-    ControlFlow::getInstance().addBlock();
-
-    auto after_if = ControlFlow::getInstance().getCurrentBlock();
-
-    ControlFlow::getInstance().addChild(parent_from_if, after_if);
-    ControlFlow::getInstance().addChild(parent_from_else, after_if);
+    ControlFlow::getInstance().addVirtualBlock(parent_from_else, parent_from_if);
 
 }
 
@@ -881,6 +885,11 @@ void SemAnalysisVisitor::visitListStmt(ListStmt *list_stmt)
 {
     for (ListStmt::iterator i = list_stmt->begin(); i != list_stmt->end(); ++i)
     {
+        if (ControlFlow::getInstance().wasIf())
+        {
+            ControlFlow::getInstance().addMissingBlock();
+        }
+
         (*i)->accept(this);
     }
 }
