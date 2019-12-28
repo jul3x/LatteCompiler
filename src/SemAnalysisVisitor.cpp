@@ -217,6 +217,8 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
 
     cond->expr_->accept(this);
 
+    fprintf(stderr, "If: %d %d\n", cond->expr_->is_always_false_, cond->expr_->is_always_true_);
+
     if (cond->expr_->type_ != "boolean")
     {
         std::string error = "Condition in if statement must be of boolean type!\n";
@@ -429,6 +431,8 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
 
     visitIdent(e_var->ident_);
     e_var->is_lvalue_ = true;
+    e_var->is_always_false_ = false;
+    e_var->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
@@ -466,6 +470,8 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
 
     e_arr_var->type_ = e_arr_var->expr_1->type_.substr(0, e_arr_var->expr_1->type_.length() - 2);
     e_arr_var->is_lvalue_ = true;
+    e_arr_var->is_always_false_ = false;
+    e_arr_var->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
@@ -476,6 +482,8 @@ void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
 
     e_lit_int->type_ = "int";
     e_lit_int->is_lvalue_ = false;
+    e_lit_int->is_always_false_ = false;
+    e_lit_int->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEString(EString *e_string)
@@ -486,6 +494,8 @@ void SemAnalysisVisitor::visitEString(EString *e_string)
 
     e_string->type_ = "string";
     e_string->is_lvalue_ = false;
+    e_string->is_always_false_ = false;
+    e_string->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
@@ -493,6 +503,8 @@ void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
     /* Code For ELitTrue Goes Here */
     e_lit_true->type_ = "boolean";
     e_lit_true->is_lvalue_ = false;
+    e_lit_true->is_always_false_ = false;
+    e_lit_true->is_always_true_ = true;
 }
 
 void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
@@ -500,6 +512,8 @@ void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
     /* Code For ELitFalse Goes Here */
     e_lit_false->type_ = "boolean";
     e_lit_false->is_lvalue_ = false;
+    e_lit_false->is_always_false_ = true;
+    e_lit_false->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
@@ -507,7 +521,8 @@ void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
     /* Code For ELitNull Goes Here */
     e_lit_null->type_ = "void";
     e_lit_null->is_lvalue_ = false;
-
+    e_lit_null->is_always_false_ = false;
+    e_lit_null->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
@@ -540,6 +555,8 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
 
     // TODO It depends on what function returns!
     e_app->is_lvalue_ = false;
+    e_app->is_always_false_ = false;
+    e_app->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
@@ -564,6 +581,8 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
     }
 
     e_neg->is_lvalue_ = false;
+    e_neg->is_always_false_ = false;
+    e_neg->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitENot(ENot *e_not)
@@ -580,6 +599,22 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
     }
 
     e_not->is_lvalue_ = false;
+
+    if (e_not->expr_->is_always_false_)
+    {
+        e_not->is_always_false_ = false;
+        e_not->is_always_true_ = true;
+    }
+    else if (e_not->expr_->is_always_true_)
+    {
+        e_not->is_always_false_ = true;
+        e_not->is_always_true_ = false;
+    }
+    else
+    {
+        e_not->is_always_false_ = false;
+        e_not->is_always_true_ = false;
+    }
 }
 
 void SemAnalysisVisitor::visitEVarNew(EVarNew *e_var_new)
@@ -597,6 +632,8 @@ void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
     ev_std_new->type_ = ev_std_new->stdtype_->get();
 
     ev_std_new->is_lvalue_ = false;
+    ev_std_new->is_always_false_ = false;
+    ev_std_new->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEArrNew(EArrNew *e_arr_new)
@@ -622,6 +659,8 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
 
     ea_std_new->type_ = ea_std_new->stdtype_->get() + "[]";
     ea_std_new->is_lvalue_ = false;
+    ea_std_new->is_always_false_ = false;
+    ea_std_new->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarCast(EVarCast *e_var_cast)
@@ -674,6 +713,8 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     e_mul->type_ = "int";
 
     e_mul->is_lvalue_ = false;
+    e_mul->is_always_false_ = false;
+    e_mul->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
@@ -712,6 +753,8 @@ void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
     }
 
     e_add->is_lvalue_ = false;
+    e_add->is_always_false_ = false;
+    e_add->is_always_true_ = false;
 }
 
 void SemAnalysisVisitor::visitERel(ERel *e_rel)
@@ -730,11 +773,61 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
     {
         if (e_rel->expr_1->type_ == "int" &&
             e_rel->expr_2->type_ == "int")
+        {
             is_ok = true;
+
+            // TODO: Check if expression can be computed
+            e_rel->is_always_false_ = false;
+            e_rel->is_always_true_ = false;
+        }
 
         if (e_rel->expr_1->type_ == "boolean" &&
             e_rel->expr_2->type_ == "boolean")
+        {
             is_ok = true;
+
+            if (is_eq != nullptr)
+            {
+                if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_true_) ||
+                    (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_false_))
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_false_) ||
+                         (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_true_))
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+
+            if (is_neq != nullptr)
+            {
+                if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_true_) ||
+                    (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_false_))
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+                else if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_false_) ||
+                         (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_true_))
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+        }
 
         if (!is_ok)
         {
@@ -756,6 +849,8 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
 
     e_rel->type_ = "boolean";
     e_rel->is_lvalue_ = false;
+
+    // TODO - trivial boolean formula here
 }
 
 void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
@@ -774,6 +869,22 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
 
     e_and->type_ = "boolean";
     e_and->is_lvalue_ = false;
+
+    if (e_and->expr_1->is_always_false_ || e_and->expr_2->is_always_false_)
+    {
+        e_and->is_always_false_ = true;
+        e_and->is_always_true_ = false;
+    }
+    else if (e_and->expr_1->is_always_true_ && e_and->expr_2->is_always_true_)
+    {
+        e_and->is_always_false_ = false;
+        e_and->is_always_true_ = true;
+    }
+    else
+    {
+        e_and->is_always_false_ = false;
+        e_and->is_always_true_ = false;
+    }
 }
 
 void SemAnalysisVisitor::visitEOr(EOr *e_or)
@@ -792,6 +903,22 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
 
     e_or->type_ = "boolean";
     e_or->is_lvalue_ = false;
+
+    if (e_or->expr_1->is_always_true_ || e_or->expr_2->is_always_true_)
+    {
+        e_or->is_always_false_ = false;
+        e_or->is_always_true_ = true;
+    }
+    else if (e_or->expr_1->is_always_false_ && e_or->expr_2->is_always_false_)
+    {
+        e_or->is_always_false_ = true;
+        e_or->is_always_true_ = false;
+    }
+    else
+    {
+        e_or->is_always_false_ = false;
+        e_or->is_always_true_ = false;
+    }
 }
 
 void SemAnalysisVisitor::visitPlus(Plus *plus)
