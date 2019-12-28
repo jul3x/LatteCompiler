@@ -251,6 +251,8 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
 
     cond_else->expr_->accept(this);
 
+    fprintf(stderr, "If: %d %d\n", cond_else->expr_->is_always_false_, cond_else->expr_->is_always_true_);
+
     if (cond_else->expr_->type_ != "boolean")
     {
         std::string error = "Condition in if statement must be of boolean type!\n";
@@ -433,6 +435,7 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
     e_var->is_lvalue_ = true;
     e_var->is_always_false_ = false;
     e_var->is_always_true_ = false;
+    e_var->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
@@ -472,6 +475,7 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
     e_arr_var->is_lvalue_ = true;
     e_arr_var->is_always_false_ = false;
     e_arr_var->is_always_true_ = false;
+    e_arr_var->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
@@ -484,6 +488,9 @@ void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
     e_lit_int->is_lvalue_ = false;
     e_lit_int->is_always_false_ = false;
     e_lit_int->is_always_true_ = false;
+    e_lit_int->has_value_ = true;
+
+    e_lit_int->value_ = e_lit_int->integer_;
 }
 
 void SemAnalysisVisitor::visitEString(EString *e_string)
@@ -496,6 +503,7 @@ void SemAnalysisVisitor::visitEString(EString *e_string)
     e_string->is_lvalue_ = false;
     e_string->is_always_false_ = false;
     e_string->is_always_true_ = false;
+    e_string->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
@@ -505,6 +513,7 @@ void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
     e_lit_true->is_lvalue_ = false;
     e_lit_true->is_always_false_ = false;
     e_lit_true->is_always_true_ = true;
+    e_lit_true->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
@@ -514,6 +523,7 @@ void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
     e_lit_false->is_lvalue_ = false;
     e_lit_false->is_always_false_ = true;
     e_lit_false->is_always_true_ = false;
+    e_lit_false->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
@@ -523,6 +533,7 @@ void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
     e_lit_null->is_lvalue_ = false;
     e_lit_null->is_always_false_ = false;
     e_lit_null->is_always_true_ = false;
+    e_lit_null->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
@@ -557,6 +568,8 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
     e_app->is_lvalue_ = false;
     e_app->is_always_false_ = false;
     e_app->is_always_true_ = false;
+    e_app->has_value_ = false;
+
 }
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
@@ -583,6 +596,8 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
     e_neg->is_lvalue_ = false;
     e_neg->is_always_false_ = false;
     e_neg->is_always_true_ = false;
+    e_neg->has_value_ = e_neg->expr_->has_value_;
+    e_neg->value_ = e_neg->expr_->value_;
 }
 
 void SemAnalysisVisitor::visitENot(ENot *e_not)
@@ -615,6 +630,8 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
         e_not->is_always_false_ = false;
         e_not->is_always_true_ = false;
     }
+
+    e_not->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarNew(EVarNew *e_var_new)
@@ -634,6 +651,7 @@ void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
     ev_std_new->is_lvalue_ = false;
     ev_std_new->is_always_false_ = false;
     ev_std_new->is_always_true_ = false;
+    ev_std_new->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEArrNew(EArrNew *e_arr_new)
@@ -661,6 +679,8 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
     ea_std_new->is_lvalue_ = false;
     ea_std_new->is_always_false_ = false;
     ea_std_new->is_always_true_ = false;
+    ea_std_new->has_value_ = false;
+
 }
 
 void SemAnalysisVisitor::visitEVarCast(EVarCast *e_var_cast)
@@ -715,6 +735,26 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     e_mul->is_lvalue_ = false;
     e_mul->is_always_false_ = false;
     e_mul->is_always_true_ = false;
+
+    auto is_mul = dynamic_cast<Times*>(e_mul->mulop_);
+    auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
+    auto is_mod = dynamic_cast<Mod*>(e_mul->mulop_);
+
+    e_mul->has_value_ = e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_;
+
+    if (is_mul != nullptr && e_mul->has_value_)
+        e_mul->value_ = e_mul->expr_1->value_ * e_mul->expr_2->value_;
+    if (is_div != nullptr && e_mul->has_value_)
+    {
+        if (e_mul->expr_2->value_ == 0)
+        {
+            throw std::invalid_argument("Numbers cannot be divided by 0!\n");
+        }
+
+        e_mul->value_ = e_mul->expr_1->value_ / e_mul->expr_2->value_;
+    }
+    if (is_mod != nullptr && e_mul->has_value_)
+        e_mul->value_ = e_mul->expr_1->value_ % e_mul->expr_2->value_;
 }
 
 void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
@@ -755,6 +795,14 @@ void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
     e_add->is_lvalue_ = false;
     e_add->is_always_false_ = false;
     e_add->is_always_true_ = false;
+
+    e_add->has_value_ = e_add->expr_1->has_value_ && e_add->expr_2->has_value_;
+
+    if (is_plus != nullptr)
+        e_add->value_ = e_add->expr_1->value_ + e_add->expr_2->value_;
+    else
+        e_add->value_ = e_add->expr_1->value_ - e_add->expr_2->value_;
+
 }
 
 void SemAnalysisVisitor::visitERel(ERel *e_rel)
@@ -767,7 +815,15 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
 
     auto is_eq = dynamic_cast<EQU*>(e_rel->relop_);
     auto is_neq = dynamic_cast<NE*>(e_rel->relop_);
+    auto is_lt = dynamic_cast<LTH*>(e_rel->relop_);
+    auto is_le = dynamic_cast<LE*>(e_rel->relop_);
+    auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
+    auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
+
     bool is_ok = false;
+
+    e_rel->is_always_false_ = false;
+    e_rel->is_always_true_ = false;
 
     if (is_eq != nullptr || is_neq != nullptr)
     {
@@ -776,9 +832,35 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
         {
             is_ok = true;
 
-            // TODO: Check if expression can be computed
-            e_rel->is_always_false_ = false;
-            e_rel->is_always_true_ = false;
+            if (e_rel->expr_1->has_value_ && e_rel->expr_2->has_value_)
+            {
+                if (is_eq != nullptr)
+                {
+                    if (e_rel->expr_1->value_ == e_rel->expr_2->value_)
+                    {
+                        e_rel->is_always_false_ = false;
+                        e_rel->is_always_true_ = true;
+                    }
+                    else
+                    {
+                        e_rel->is_always_false_ = true;
+                        e_rel->is_always_true_ = false;
+                    }
+                }
+                else
+                {
+                    if (e_rel->expr_1->value_ == e_rel->expr_2->value_)
+                    {
+                        e_rel->is_always_false_ = true;
+                        e_rel->is_always_true_ = false;
+                    }
+                    else
+                    {
+                        e_rel->is_always_false_ = false;
+                        e_rel->is_always_true_ = true;
+                    }
+                }
+            }
         }
 
         if (e_rel->expr_1->type_ == "boolean" &&
@@ -800,11 +882,6 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
                     e_rel->is_always_false_ = true;
                     e_rel->is_always_true_ = false;
                 }
-                else
-                {
-                    e_rel->is_always_false_ = false;
-                    e_rel->is_always_true_ = false;
-                }
             }
 
             if (is_neq != nullptr)
@@ -821,11 +898,6 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
                     e_rel->is_always_false_ = false;
                     e_rel->is_always_true_ = true;
                 }
-                else
-                {
-                    e_rel->is_always_false_ = false;
-                    e_rel->is_always_true_ = false;
-                }
             }
         }
 
@@ -839,6 +911,62 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
              e_rel->expr_2->type_ == "int")
     {
         is_ok = true;
+
+        if (e_rel->expr_1->has_value_ && e_rel->expr_2->has_value_)
+        {
+            if (is_lt != nullptr)
+            {
+                if (e_rel->expr_1->value_ < e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+            else if (is_le != nullptr)
+            {
+                if (e_rel->expr_1->value_ <= e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+            else if (is_gt != nullptr)
+            {
+                if (e_rel->expr_1->value_ > e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+            else if (is_ge != nullptr)
+            {
+                if (e_rel->expr_1->value_ >= e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+        }
     }
 
     if (!is_ok)
@@ -849,6 +977,7 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
 
     e_rel->type_ = "boolean";
     e_rel->is_lvalue_ = false;
+    e_rel->has_value_ = false;
 
     // TODO - trivial boolean formula here
 }
@@ -885,6 +1014,8 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
         e_and->is_always_false_ = false;
         e_and->is_always_true_ = false;
     }
+
+    e_and->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEOr(EOr *e_or)
@@ -919,6 +1050,8 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
         e_or->is_always_false_ = false;
         e_or->is_always_true_ = false;
     }
+
+    e_or->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitPlus(Plus *plus)

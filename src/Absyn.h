@@ -283,7 +283,7 @@ public:
 class Expr : public Visitable
 {
 public:
-    Expr() : is_lvalue_(false), is_always_false_(false), is_always_true_(false) {}
+    Expr() : is_lvalue_(false), is_always_false_(false), is_always_true_(false), has_value_(false) {}
 
     virtual Expr *clone() const = 0;
 
@@ -291,6 +291,9 @@ public:
     bool is_lvalue_;
 
     bool is_always_true_, is_always_false_;
+
+    bool has_value_;
+    int value_;
 };
 
 class AddOp : public Visitable
