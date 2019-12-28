@@ -36,6 +36,9 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
     ControlFlow::getInstance().newFunction();
 
     fn_def->type_->accept(this);
+
+    GlobalSymbols::getInstance().checkType(fn_def->type_->get());
+
     visitIdent(fn_def->ident_);
     fn_def->listarg_->accept(this);
     fn_def->block_->accept(this);
@@ -85,6 +88,8 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
     ar->type_->accept(this);
     visitIdent(ar->ident_);
 
+    GlobalSymbols::getInstance().checkType(ar->type_->get());
+
     if (ar->type_->get().substr(0, 4) == "void")
     {
         std::string error = "Cannot declare variable with void type!\n";
@@ -118,6 +123,8 @@ void SemAnalysisVisitor::visitDecl(Decl *decl)
 {
     /* Code For Decl Goes Here */
     decl->type_->accept(this);
+
+    GlobalSymbols::getInstance().checkType(ar->type_->get());
 
     decl->listitem_->type_ = decl->type_->get();
 

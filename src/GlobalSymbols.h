@@ -56,6 +56,20 @@ public:
         return this->checkInheritanceCorrectness() && this->searchForMain();
     }
 
+    bool checkType(const std::string &type) const {
+        auto class_it = classes_.find(type);
+
+        if (class_it == classes_.end() &&
+            type != "int" && type != "void" && type != "boolean" && type != "string" &&
+            type != "int[]" && type != "boolean[]" && type != "string[]")
+        {
+            std::string error = type + " is not a valid type name!\n";
+            throw std::invalid_argument(error.c_str());
+        }
+
+        return true;
+    }
+
     std::string getFunctionType(const std::string &ident) const {
         auto function = functions_.find(ident);
 
