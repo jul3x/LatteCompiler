@@ -34,7 +34,8 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
     LocalSymbols::getInstance().reset();
     LocalSymbols::getInstance().enterBlock();
 
-    ControlFlow::getInstance().newFunction(fn_def->ident_, fn_def->type_->get());
+    ControlFlow::getInstance().newFunction(fn_def->ident_, fn_def->type_->get(),
+                                           fn_def->line_number_);
 
     fn_def->type_->accept(this);
 
@@ -210,14 +211,30 @@ void SemAnalysisVisitor::visitRet(Ret *ret)
         throw std::invalid_argument("Return with value can be used only for non-void return types!\n");
     }
 
-    ControlFlow::getInstance().setTermination(ret->expr_->type_);
+    if (!ControlFlow::getInstance().setTermination(ret->expr_->type_))
+    {
+        std::string error = "Error line " + std::to_string(ret->line_number_) +
+                ": return type " + ret->expr_->type_ +
+                " does not match declared function \"" +
+                ControlFlow::getInstance().getCurrentFunctionName() + "\" return type: " +
+                ControlFlow::getInstance().getCurrentFunctionType() + "!\n";
+        throw std::invalid_argument(error);
+    }
 }
 
 void SemAnalysisVisitor::visitVRet(VRet *v_ret)
 {
     /* Code For VRet Goes Here */
 
-    ControlFlow::getInstance().setTermination("void");
+    if (!ControlFlow::getInstance().setTermination("void"))
+    {
+        std::string error = "Error line " + std::to_string(v_ret->line_number_) +
+                ": return type void "
+                " does not match declared function \"" +
+                ControlFlow::getInstance().getCurrentFunctionName() + "\" return type: " +
+                ControlFlow::getInstance().getCurrentFunctionType() + "!\n";
+        throw std::invalid_argument(error);
+    }
 }
 
 void SemAnalysisVisitor::visitCond(Cond *cond)

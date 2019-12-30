@@ -2085,6 +2085,7 @@ yyreduce:
     {
         std::reverse((yyvsp[0].listtopdef_)->begin(), (yyvsp[0].listtopdef_)->end());
         (yyval.program_) = new Prog((yyvsp[0].listtopdef_));
+        yyval.program_->line_number_ = yy_mylinenumber;
         YY_RESULT_Program_ = (yyval.program_);
     }
 #line 2137 "Parser.C" /* yacc.c:1646  */
@@ -2095,6 +2096,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-2].listarg_)->begin(), (yyvsp[-2].listarg_)->end());
         (yyval.topdef_) = new FnDef((yyvsp[-5].type_), (yyvsp[-4].string_), (yyvsp[-2].listarg_), (yyvsp[0].block_));
+        yyval.topdef_->line_number_ = yy_mylinenumber;
     }
 #line 2143 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2104,6 +2106,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-1].listclsfld_)->begin(), (yyvsp[-1].listclsfld_)->end());
         (yyval.topdef_) = new ClsDef((yyvsp[-3].string_), (yyvsp[-1].listclsfld_));
+        yyval.topdef_->line_number_ = yy_mylinenumber;
     }
 #line 2149 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2113,6 +2116,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-1].listclsfld_)->begin(), (yyvsp[-1].listclsfld_)->end());
         (yyval.topdef_) = new InhClsDef((yyvsp[-5].string_), (yyvsp[-3].string_), (yyvsp[-1].listclsfld_));
+        yyval.topdef_->line_number_ = yy_mylinenumber;
     }
 #line 2155 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2122,6 +2126,7 @@ yyreduce:
     {
         (yyval.listclsfld_) = new ListClsFld();
         (yyval.listclsfld_)->push_back((yyvsp[0].clsfld_));
+        yyval.listclsfld_->line_number_ = yy_mylinenumber;
     }
 #line 2161 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2131,6 +2136,7 @@ yyreduce:
     {
         (yyvsp[0].listclsfld_)->push_back((yyvsp[-1].clsfld_));
         (yyval.listclsfld_) = (yyvsp[0].listclsfld_);
+        yyval.listclsfld_->line_number_ = yy_mylinenumber;
     }
 #line 2167 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2140,6 +2146,7 @@ yyreduce:
     {
         (yyval.listtopdef_) = new ListTopDef();
         (yyval.listtopdef_)->push_back((yyvsp[0].topdef_));
+        yyval.listtopdef_->line_number_ = yy_mylinenumber;
     }
 #line 2173 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2149,6 +2156,7 @@ yyreduce:
     {
         (yyvsp[0].listtopdef_)->push_back((yyvsp[-1].topdef_));
         (yyval.listtopdef_) = (yyvsp[0].listtopdef_);
+        yyval.listtopdef_->line_number_ = yy_mylinenumber;
     }
 #line 2179 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2158,6 +2166,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-1].listident_)->begin(), (yyvsp[-1].listident_)->end());
         (yyval.clsfld_) = new VarDef((yyvsp[-2].type_), (yyvsp[-1].listident_));
+        yyval.clsfld_->line_number_ = yy_mylinenumber;
     }
 #line 2185 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2167,6 +2176,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-2].listarg_)->begin(), (yyvsp[-2].listarg_)->end());
         (yyval.clsfld_) = new MetDef((yyvsp[-5].type_), (yyvsp[-4].string_), (yyvsp[-2].listarg_), (yyvsp[0].block_));
+        yyval.clsfld_->line_number_ = yy_mylinenumber;
     }
 #line 2191 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2176,6 +2186,7 @@ yyreduce:
     {
         (yyval.listident_) = new ListIdent();
         (yyval.listident_)->push_back((yyvsp[0].string_));
+        yyval.listident_->line_number_ = yy_mylinenumber;
     }
 #line 2197 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2185,6 +2196,7 @@ yyreduce:
     {
         (yyvsp[0].listident_)->push_back((yyvsp[-2].string_));
         (yyval.listident_) = (yyvsp[0].listident_);
+        yyval.listident_->line_number_ = yy_mylinenumber;
     }
 #line 2203 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2193,6 +2205,7 @@ yyreduce:
 #line 854 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.arg_) = new Ar((yyvsp[-1].type_), (yyvsp[0].string_));
+        yyval.arg_->line_number_ = yy_mylinenumber;
     }
 #line 2209 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2201,6 +2214,7 @@ yyreduce:
 #line 856 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.listarg_) = new ListArg();
+        yyval.listarg_->line_number_ = yy_mylinenumber;
     }
 #line 2215 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2210,6 +2224,7 @@ yyreduce:
     {
         (yyval.listarg_) = new ListArg();
         (yyval.listarg_)->push_back((yyvsp[0].arg_));
+        yyval.listarg_->line_number_ = yy_mylinenumber;
     }
 #line 2221 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2219,6 +2234,7 @@ yyreduce:
     {
         (yyvsp[0].listarg_)->push_back((yyvsp[-2].arg_));
         (yyval.listarg_) = (yyvsp[0].listarg_);
+        yyval.listarg_->line_number_ = yy_mylinenumber;
     }
 #line 2227 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2227,6 +2243,7 @@ yyreduce:
 #line 860 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.block_) = new Blk((yyvsp[-1].liststmt_));
+        yyval.block_->line_number_ = yy_mylinenumber;
     }
 #line 2233 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2235,6 +2252,7 @@ yyreduce:
 #line 862 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.liststmt_) = new ListStmt();
+        yyval.liststmt_->line_number_ = yy_mylinenumber;
     }
 #line 2239 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2244,6 +2262,7 @@ yyreduce:
     {
         (yyvsp[-1].liststmt_)->push_back((yyvsp[0].stmt_));
         (yyval.liststmt_) = (yyvsp[-1].liststmt_);
+        yyval.liststmt_->line_number_ = yy_mylinenumber;
     }
 #line 2245 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2252,6 +2271,7 @@ yyreduce:
 #line 865 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new Empty();
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2251 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2260,6 +2280,7 @@ yyreduce:
 #line 866 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new BStmt((yyvsp[0].block_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2257 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2269,6 +2290,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-1].listitem_)->begin(), (yyvsp[-1].listitem_)->end());
         (yyval.stmt_) = new Decl((yyvsp[-2].type_), (yyvsp[-1].listitem_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2263 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2277,6 +2299,7 @@ yyreduce:
 #line 868 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new Ass((yyvsp[-3].expr_), (yyvsp[-1].expr_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2269 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2285,6 +2308,7 @@ yyreduce:
 #line 869 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new Incr((yyvsp[-2].expr_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2275 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2293,6 +2317,7 @@ yyreduce:
 #line 870 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new Decr((yyvsp[-2].expr_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2281 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2301,6 +2326,7 @@ yyreduce:
 #line 871 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new Ret((yyvsp[-1].expr_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2287 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2309,6 +2335,7 @@ yyreduce:
 #line 872 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new VRet();
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2293 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2317,6 +2344,7 @@ yyreduce:
 #line 873 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new Cond((yyvsp[-2].expr_), (yyvsp[0].stmt_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2299 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2325,6 +2353,7 @@ yyreduce:
 #line 874 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new CondElse((yyvsp[-4].expr_), (yyvsp[-2].stmt_), (yyvsp[0].stmt_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2305 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2333,6 +2362,7 @@ yyreduce:
 #line 875 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new While((yyvsp[-2].expr_), (yyvsp[0].stmt_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2311 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2341,6 +2371,7 @@ yyreduce:
 #line 876 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new For((yyvsp[-5].type_), (yyvsp[-4].string_), (yyvsp[-2].expr_), (yyvsp[0].stmt_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2317 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2349,6 +2380,7 @@ yyreduce:
 #line 877 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stmt_) = new SExp((yyvsp[-1].expr_));
+        yyval.stmt_->line_number_ = yy_mylinenumber;
     }
 #line 2323 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2357,6 +2389,7 @@ yyreduce:
 #line 879 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.item_) = new NoInit((yyvsp[0].string_));
+        yyval.item_->line_number_ = yy_mylinenumber;
     }
 #line 2329 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2365,6 +2398,7 @@ yyreduce:
 #line 880 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.item_) = new Init((yyvsp[-2].string_), (yyvsp[0].expr_));
+        yyval.item_->line_number_ = yy_mylinenumber;
     }
 #line 2335 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2374,6 +2408,7 @@ yyreduce:
     {
         (yyval.listitem_) = new ListItem();
         (yyval.listitem_)->push_back((yyvsp[0].item_));
+        yyval.listitem_->line_number_ = yy_mylinenumber;
     }
 #line 2341 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2383,6 +2418,7 @@ yyreduce:
     {
         (yyvsp[0].listitem_)->push_back((yyvsp[-2].item_));
         (yyval.listitem_) = (yyvsp[0].listitem_);
+        yyval.listitem_->line_number_ = yy_mylinenumber;
     }
 #line 2347 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2391,6 +2427,7 @@ yyreduce:
 #line 885 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stdtype_) = new Int();
+        yyval.stdtype_->line_number_ = yy_mylinenumber;
     }
 #line 2353 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2399,6 +2436,7 @@ yyreduce:
 #line 886 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stdtype_) = new Str();
+        yyval.stdtype_->line_number_ = yy_mylinenumber;
     }
 #line 2359 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2407,6 +2445,7 @@ yyreduce:
 #line 887 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stdtype_) = new Bool();
+        yyval.stdtype_->line_number_ = yy_mylinenumber;
     }
 #line 2365 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2415,6 +2454,7 @@ yyreduce:
 #line 888 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.stdtype_) = new Void();
+        yyval.stdtype_->line_number_ = yy_mylinenumber;
     }
 #line 2371 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2423,6 +2463,7 @@ yyreduce:
 #line 890 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.type_) = new StVarType((yyvsp[0].stdtype_));
+        yyval.type_->line_number_ = yy_mylinenumber;
     }
 #line 2377 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2431,6 +2472,7 @@ yyreduce:
 #line 891 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.type_) = new StArrType((yyvsp[-1].stdtype_));
+        yyval.type_->line_number_ = yy_mylinenumber;
     }
 #line 2383 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2439,6 +2481,7 @@ yyreduce:
 #line 892 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.type_) = new VarType((yyvsp[0].string_));
+        yyval.type_->line_number_ = yy_mylinenumber;
     }
 #line 2389 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2447,6 +2490,7 @@ yyreduce:
 #line 893 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.type_) = new ArrType((yyvsp[-1].string_));
+        yyval.type_->line_number_ = yy_mylinenumber;
     }
 #line 2395 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2455,6 +2499,7 @@ yyreduce:
 #line 899 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EVar((yyvsp[0].string_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2401 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2463,6 +2508,7 @@ yyreduce:
 #line 900 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EClsVar((yyvsp[-2].expr_), (yyvsp[0].string_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2407 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2471,6 +2517,7 @@ yyreduce:
 #line 901 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EArrVar((yyvsp[-3].expr_), (yyvsp[-1].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2413 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2479,6 +2526,7 @@ yyreduce:
 #line 902 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ELitInt((yyvsp[0].int_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2419 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2487,6 +2535,7 @@ yyreduce:
 #line 903 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EString((yyvsp[0].string_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2425 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2495,6 +2544,7 @@ yyreduce:
 #line 904 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ELitTrue();
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2431 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2503,6 +2553,7 @@ yyreduce:
 #line 905 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ELitFalse();
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2437 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2511,6 +2562,7 @@ yyreduce:
 #line 906 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ELitNull();
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2443 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2520,6 +2572,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-1].listexpr_)->begin(), (yyvsp[-1].listexpr_)->end());
         (yyval.expr_) = new EApp((yyvsp[-3].string_), (yyvsp[-1].listexpr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2449 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2529,6 +2582,7 @@ yyreduce:
     {
         std::reverse((yyvsp[-1].listexpr_)->begin(), (yyvsp[-1].listexpr_)->end());
         (yyval.expr_) = new EClsApp((yyvsp[-5].expr_), (yyvsp[-3].string_), (yyvsp[-1].listexpr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2455 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2537,6 +2591,7 @@ yyreduce:
 #line 909 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[-1].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2461 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2545,6 +2600,7 @@ yyreduce:
 #line 911 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ENeg((yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2467 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2553,6 +2609,7 @@ yyreduce:
 #line 912 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ENot((yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2473 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2561,6 +2618,7 @@ yyreduce:
 #line 913 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2479 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2569,6 +2627,7 @@ yyreduce:
 #line 915 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EVarNew((yyvsp[0].string_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2485 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2577,6 +2636,7 @@ yyreduce:
 #line 916 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EVStdNew((yyvsp[0].stdtype_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2491 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2585,6 +2645,7 @@ yyreduce:
 #line 917 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EArrNew((yyvsp[-3].string_), (yyvsp[-1].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2497 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2593,6 +2654,7 @@ yyreduce:
 #line 918 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EAStdNew((yyvsp[-3].stdtype_), (yyvsp[-1].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2503 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2601,6 +2663,7 @@ yyreduce:
 #line 919 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2509 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2609,6 +2672,7 @@ yyreduce:
 #line 921 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EVarCast((yyvsp[-2].string_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2515 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2617,6 +2681,7 @@ yyreduce:
 #line 922 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EVStdCast((yyvsp[-2].stdtype_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2521 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2625,6 +2690,7 @@ yyreduce:
 #line 923 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EArrCast((yyvsp[-3].string_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2527 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2633,6 +2699,7 @@ yyreduce:
 #line 924 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EAStdCast((yyvsp[-3].stdtype_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2533 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2641,6 +2708,7 @@ yyreduce:
 #line 925 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2539 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2649,6 +2717,7 @@ yyreduce:
 #line 927 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EMul((yyvsp[-2].expr_), (yyvsp[-1].mulop_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2545 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2657,6 +2726,7 @@ yyreduce:
 #line 928 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2551 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2665,6 +2735,7 @@ yyreduce:
 #line 930 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EAdd((yyvsp[-2].expr_), (yyvsp[-1].addop_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2557 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2673,6 +2744,7 @@ yyreduce:
 #line 931 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2563 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2681,6 +2753,7 @@ yyreduce:
 #line 933 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new ERel((yyvsp[-2].expr_), (yyvsp[-1].relop_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2569 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2689,6 +2762,7 @@ yyreduce:
 #line 934 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2575 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2697,6 +2771,7 @@ yyreduce:
 #line 936 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EAnd((yyvsp[-2].expr_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2581 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2705,6 +2780,7 @@ yyreduce:
 #line 937 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2587 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2713,6 +2789,7 @@ yyreduce:
 #line 939 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = new EOr((yyvsp[-2].expr_), (yyvsp[0].expr_));
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2593 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2721,6 +2798,7 @@ yyreduce:
 #line 940 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.expr_) = (yyvsp[0].expr_);
+        yyval.expr_->line_number_ = yy_mylinenumber;
     }
 #line 2599 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2729,6 +2807,7 @@ yyreduce:
 #line 942 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.listexpr_) = new ListExpr();
+        yyval.listexpr_->line_number_ = yy_mylinenumber;
     }
 #line 2605 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2738,6 +2817,7 @@ yyreduce:
     {
         (yyval.listexpr_) = new ListExpr();
         (yyval.listexpr_)->push_back((yyvsp[0].expr_));
+        yyval.listexpr_->line_number_ = yy_mylinenumber;
     }
 #line 2611 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2747,6 +2827,7 @@ yyreduce:
     {
         (yyvsp[0].listexpr_)->push_back((yyvsp[-2].expr_));
         (yyval.listexpr_) = (yyvsp[0].listexpr_);
+        yyval.listexpr_->line_number_ = yy_mylinenumber;
     }
 #line 2617 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2755,6 +2836,7 @@ yyreduce:
 #line 946 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.addop_) = new Plus();
+        yyval.addop_->line_number_ = yy_mylinenumber;
     }
 #line 2623 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2763,6 +2845,7 @@ yyreduce:
 #line 947 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.addop_) = new Minus();
+        yyval.addop_->line_number_ = yy_mylinenumber;
     }
 #line 2629 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2771,6 +2854,7 @@ yyreduce:
 #line 949 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.mulop_) = new Times();
+        yyval.mulop_->line_number_ = yy_mylinenumber;
     }
 #line 2635 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2779,6 +2863,7 @@ yyreduce:
 #line 950 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.mulop_) = new Div();
+        yyval.mulop_->line_number_ = yy_mylinenumber;
     }
 #line 2641 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2787,6 +2872,7 @@ yyreduce:
 #line 951 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.mulop_) = new Mod();
+        yyval.mulop_->line_number_ = yy_mylinenumber;
     }
 #line 2647 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2795,6 +2881,7 @@ yyreduce:
 #line 953 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.relop_) = new LTH();
+        yyval.relop_->line_number_ = yy_mylinenumber;
     }
 #line 2653 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2803,6 +2890,7 @@ yyreduce:
 #line 954 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.relop_) = new LE();
+        yyval.relop_->line_number_ = yy_mylinenumber;
     }
 #line 2659 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2811,6 +2899,7 @@ yyreduce:
 #line 955 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.relop_) = new GTH();
+        yyval.relop_->line_number_ = yy_mylinenumber;
     }
 #line 2665 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2819,6 +2908,7 @@ yyreduce:
 #line 956 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.relop_) = new GE();
+        yyval.relop_->line_number_ = yy_mylinenumber;
     }
 #line 2671 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2827,6 +2917,7 @@ yyreduce:
 #line 957 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.relop_) = new EQU();
+        yyval.relop_->line_number_ = yy_mylinenumber;
     }
 #line 2677 "Parser.C" /* yacc.c:1646  */
     break;
@@ -2835,6 +2926,7 @@ yyreduce:
 #line 958 "Latte.y" /* yacc.c:1646  */
     {
         (yyval.relop_) = new NE();
+        yyval.relop_->line_number_ = yy_mylinenumber;
     }
 #line 2683 "Parser.C" /* yacc.c:1646  */
     break;
