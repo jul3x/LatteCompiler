@@ -1229,7 +1229,7 @@ void SemAnalysisVisitor::visitListExpr(ListExpr *list_expr)
 
 void SemAnalysisVisitor::visitInteger(Integer x)
 {
-    /* Code for Integer Goes Here */
+
 }
 
 void SemAnalysisVisitor::visitChar(Char x)

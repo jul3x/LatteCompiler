@@ -57,7 +57,20 @@ int main(int argc, char **argv)
     else
         input = stdin;
 
-    Program *parse_tree = pProgram(input);
+    Program *parse_tree;
+
+    try
+    {
+        parse_tree = pProgram(input);
+    }
+    catch (std::out_of_range &e)
+    {
+        fprintf(stderr, "ERROR\n");
+        fprintf(stderr, "Integer value should be greater or equal -2147483648 and"
+                        " less or equal 2147483647!\n");
+        return 1;
+    }
+
     if (parse_tree)
     {
         printf("\nParse Succesful!\n");
@@ -102,5 +115,6 @@ int main(int argc, char **argv)
 
         return 0;
     }
+
     return 1;
 }
