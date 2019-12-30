@@ -1,4 +1,7 @@
 #include "SemAnalysisVisitor.h"
+#include "LocalSymbols.h"
+#include "GlobalSymbols.h"
+#include "ControlFlow.h"
 
 
 void SemAnalysisVisitor::visitProgram(Program *t)
@@ -22,53 +25,61 @@ void SemAnalysisVisitor::visitRelOp(RelOp *t) {}     //abstract class
 void SemAnalysisVisitor::visitProg(Prog *prog)
 {
     /* Code For Prog Goes Here */
-
     prog->listtopdef_->accept(this);
 }
 
 void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 {
     /* Code For FnDef Goes Here */
+    LocalSymbols::getInstance().reset();
+    LocalSymbols::getInstance().enterBlock();
+
+    ControlFlow::getInstance().newFunction(fn_def->ident_, fn_def->type_->get());
 
     fn_def->type_->accept(this);
+
+    GlobalSymbols::getInstance().checkType(fn_def->type_->get());
+
     visitIdent(fn_def->ident_);
     fn_def->listarg_->accept(this);
     fn_def->block_->accept(this);
+
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitClsDef(ClsDef *cls_def)
 {
     /* Code For ClsDef Goes Here */
 
-    visitIdent(cls_def->ident_);
-    cls_def->listclsfld_->accept(this);
+    //visitIdent(cls_def->ident_);
+    //cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
     /* Code For InhClsDef Goes Here */
 
-    visitIdent(inh_cls_def->ident_1);
-    visitIdent(inh_cls_def->ident_2);
-    inh_cls_def->listclsfld_->accept(this);
+    //visitIdent(inh_cls_def->ident_1);
+    //visitIdent(inh_cls_def->ident_2);
+    //inh_cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitVarDef(VarDef *var_def)
 {
     /* Code For VarDef Goes Here */
 
-    var_def->type_->accept(this);
-    var_def->listident_->accept(this);
+    //var_def->type_->accept(this);
+    //var_def->listident_->accept(this);
 }
 
 void SemAnalysisVisitor::visitMetDef(MetDef *met_def)
 {
     /* Code For MetDef Goes Here */
 
-    met_def->type_->accept(this);
-    visitIdent(met_def->ident_);
-    met_def->listarg_->accept(this);
-    met_def->block_->accept(this);
+    //met_def->type_->accept(this);
+    //visitIdent(met_def->ident_);
+    //met_def->listarg_->accept(this);
+    //met_def->block_->accept(this);
 }
 
 void SemAnalysisVisitor::visitAr(Ar *ar)
@@ -77,13 +88,32 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
 
     ar->type_->accept(this);
     visitIdent(ar->ident_);
+
+    GlobalSymbols::getInstance().checkType(ar->type_->get());
+
+    if (ar->type_->get().substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    LocalSymbols::getInstance().append(ar->ident_, ar->type_->get());
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(ar->ident_);
+    GlobalSymbols::getInstance().appendLocals(function_name, ar->ident_,
+                                              ar->type_->get(), index_of_var);
+
+    ar->index_of_var_ = index_of_var;
+    ar->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitBlk(Blk *blk)
 {
     /* Code For Blk Goes Here */
-
+    LocalSymbols::getInstance().enterBlock();
     blk->liststmt_->accept(this);
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitEmpty(Empty *empty)
@@ -101,17 +131,34 @@ void SemAnalysisVisitor::visitBStmt(BStmt *b_stmt)
 void SemAnalysisVisitor::visitDecl(Decl *decl)
 {
     /* Code For Decl Goes Here */
-
     decl->type_->accept(this);
+
+    GlobalSymbols::getInstance().checkType(decl->type_->get());
+
+    decl->listitem_->type_ = decl->type_->get();
+
     decl->listitem_->accept(this);
 }
 
 void SemAnalysisVisitor::visitAss(Ass *ass)
 {
     /* Code For Ass Goes Here */
-
+    // TODO - check if lvalue is assignable
     ass->expr_1->accept(this);
     ass->expr_2->accept(this);
+
+    if (ass->expr_1->type_ != ass->expr_2->type_)
+    {
+        std::string error = "Lvalue of type: " + ass->expr_1->type_ +
+            " does not match rvalue of type: " + ass->expr_2->type_ + "!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!ass->expr_1->is_lvalue_)
+    {
+        std::string error = "Assignment can be done only for appropriate lvalues!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 }
 
 void SemAnalysisVisitor::visitIncr(Incr *incr)
@@ -119,6 +166,18 @@ void SemAnalysisVisitor::visitIncr(Incr *incr)
     /* Code For Incr Goes Here */
 
     incr->expr_->accept(this);
+
+    if (incr->expr_->type_ != "int")
+    {
+        std::string error = "Only int variables can be incremented!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!incr->expr_->is_lvalue_)
+    {
+        std::string error = "Incrementing can be done only for appropriate lvalues!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 }
 
 void SemAnalysisVisitor::visitDecr(Decr *decr)
@@ -126,18 +185,39 @@ void SemAnalysisVisitor::visitDecr(Decr *decr)
     /* Code For Decr Goes Here */
 
     decr->expr_->accept(this);
+
+    if (decr->expr_->type_ != "int")
+    {
+        std::string error = "Only int variables can be decremented!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!decr->expr_->is_lvalue_)
+    {
+        std::string error = "Decrementing can be done only for appropriate lvalues!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 }
 
 void SemAnalysisVisitor::visitRet(Ret *ret)
 {
     /* Code For Ret Goes Here */
-
+    // TODO Check if appropriate return type
     ret->expr_->accept(this);
+
+    if (ret->expr_->type_ == "void")
+    {
+        throw std::invalid_argument("Return with value can be used only for non-void return types!\n");
+    }
+
+    ControlFlow::getInstance().setTermination(ret->expr_->type_);
 }
 
 void SemAnalysisVisitor::visitVRet(VRet *v_ret)
 {
     /* Code For VRet Goes Here */
+
+    ControlFlow::getInstance().setTermination("void");
 }
 
 void SemAnalysisVisitor::visitCond(Cond *cond)
@@ -145,7 +225,41 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
     /* Code For Cond Goes Here */
 
     cond->expr_->accept(this);
-    cond->stmt_->accept(this);
+
+    if (cond->expr_->type_ != "boolean")
+    {
+        std::string error = "Condition in if statement must be of boolean type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!cond->expr_->is_always_false_ && !cond->expr_->is_always_true_)
+    {
+        auto parent = ControlFlow::getInstance().getCurrentBlock();
+
+        ControlFlow::getInstance().addBlock();
+
+        auto if_block = ControlFlow::getInstance().getCurrentBlock();
+
+        ControlFlow::getInstance().addChild(parent, if_block);
+
+        cond->stmt_->accept(this);
+
+        auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
+
+        ControlFlow::getInstance().addBlock();
+        auto after_if = ControlFlow::getInstance().getCurrentBlock();
+
+        ControlFlow::getInstance().addChild(parent, after_if);
+        ControlFlow::getInstance().addChild(parent_from_if, after_if);
+    }
+    else if (cond->expr_->is_always_true_)
+    {
+        cond->stmt_->accept(this);
+    }
+    else if (cond->expr_->is_always_false_)
+    {
+        delete cond->stmt_;
+    }
 }
 
 void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
@@ -153,26 +267,106 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
     /* Code For CondElse Goes Here */
 
     cond_else->expr_->accept(this);
-    cond_else->stmt_1->accept(this);
-    cond_else->stmt_2->accept(this);
+
+    if (cond_else->expr_->type_ != "boolean")
+    {
+        std::string error = "Condition in if statement must be of boolean type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!cond_else->expr_->is_always_false_ && !cond_else->expr_->is_always_true_)
+    {
+        auto parent = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addBlock();
+
+        auto if_block = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addChild(parent, if_block);
+
+        cond_else->stmt_1->accept(this);
+
+        auto parent_from_if = ControlFlow::getInstance().getCurrentBlock();
+
+        ControlFlow::getInstance().addBlock();
+
+        auto else_block = ControlFlow::getInstance().getCurrentBlock();
+        ControlFlow::getInstance().addChild(parent, else_block);
+
+        cond_else->stmt_2->accept(this);
+
+        auto parent_from_else = ControlFlow::getInstance().getCurrentBlock();
+
+        ControlFlow::getInstance().addVirtualBlock(parent_from_else, parent_from_if);
+    }
+    else if (cond_else->expr_->is_always_true_)
+    {
+        cond_else->stmt_1->accept(this);
+        delete cond_else->stmt_2;
+    }
+    else if (cond_else->expr_->is_always_false_)
+    {
+        cond_else->stmt_2->accept(this);
+        delete cond_else->stmt_1;
+    }
+
+    // TODO remove other statements
 }
 
 void SemAnalysisVisitor::visitWhile(While *while_)
 {
     /* Code For While Goes Here */
 
+    // Lets treat while as normal statement without any jumps - for now it does not matter
+
     while_->expr_->accept(this);
+
+    if (while_->expr_->type_ != "boolean")
+    {
+        std::string error = "Condition in while statement must be of boolean type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    // infinite loop
+    if (while_->expr_->is_always_true_)
+    {
+        ControlFlow::getInstance().enterInfiniteLoop();
+    }
+
     while_->stmt_->accept(this);
+
+    if (while_->expr_->is_always_true_)
+    {
+        ControlFlow::getInstance().exitInfiniteLoop();
+    }
 }
 
 void SemAnalysisVisitor::visitFor(For *for_)
 {
     /* Code For For Goes Here */
+    LocalSymbols::getInstance().enterBlock();
 
     for_->type_->accept(this);
     visitIdent(for_->ident_);
+
+    if (for_->type_->get().substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    LocalSymbols::getInstance().append(for_->ident_, for_->type_->get());
+
     for_->expr_->accept(this);
+
+    if (for_->type_->get() + "[]" != for_->expr_->type_)
+    {
+        std::string error = "Type of iterator: " + for_->type_->get() +
+            " of for loop does not match type of array: " + for_->expr_->type_ + "\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
     for_->stmt_->accept(this);
+
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitSExp(SExp *s_exp)
@@ -185,16 +379,48 @@ void SemAnalysisVisitor::visitSExp(SExp *s_exp)
 void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
 {
     /* Code For NoInit Goes Here */
+    if (no_init->type_.substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
 
-    visitIdent(no_init->ident_);
+    LocalSymbols::getInstance().append(no_init->ident_, no_init->type_);
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(no_init->ident_);
+    GlobalSymbols::getInstance().appendLocals(function_name, no_init->ident_,
+                                              no_init->type_, index_of_var);
 }
 
 void SemAnalysisVisitor::visitInit(Init *init)
 {
     /* Code For Init Goes Here */
-
-    visitIdent(init->ident_);
     init->expr_->accept(this);
+
+    if (init->type_.substr(0, 4) == "void")
+    {
+        std::string error = "Cannot declare variable with void type!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (init->expr_->type_ != init->type_)
+    {
+        std::string error = "Type of value: " + init->expr_->type_ +
+            " does not match type: " + init->type_ +
+            " of declared variable of name " + init->ident_ + "!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    LocalSymbols::getInstance().append(init->ident_, init->type_);
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(init->ident_);
+    GlobalSymbols::getInstance().appendLocals(function_name, init->ident_,
+                                              init->type_, index_of_var);
+
+    init->index_of_var_ = index_of_var;
+    init->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitInt(Int *int_)
@@ -256,16 +482,27 @@ void SemAnalysisVisitor::visitFun(Fun *fun)
 void SemAnalysisVisitor::visitEVar(EVar *e_var)
 {
     /* Code For EVar Goes Here */
+    e_var->type_ = LocalSymbols::getInstance().getSymbolType(e_var->ident_);
 
     visitIdent(e_var->ident_);
+    e_var->is_lvalue_ = true;
+    e_var->is_always_false_ = false;
+    e_var->is_always_true_ = false;
+    e_var->has_value_ = false;
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(e_var->ident_);
+
+    e_var->index_of_var_ = index_of_var;
+    e_var->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
 {
     /* Code For EClsVar Goes Here */
 
-    e_cls_var->expr_->accept(this);
-    visitIdent(e_cls_var->ident_);
+    //e_cls_var->expr_->accept(this);
+    //visitIdent(e_cls_var->ident_);
 }
 
 void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
@@ -274,6 +511,30 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
 
     e_arr_var->expr_1->accept(this);
     e_arr_var->expr_2->accept(this);
+
+    if (e_arr_var->expr_1->type_.substr(e_arr_var->expr_1->type_.length() - 2) != "[]")
+    {
+        std::string error = "[] operation can be performed only for array types!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (!e_arr_var->expr_1->is_lvalue_)
+    {
+        std::string error = "[] operation can be performed only on lvalue array types!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    if (e_arr_var->expr_2->type_ != "int")
+    {
+        std::string error = "[] operation can be performed only using int parameter!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_arr_var->type_ = e_arr_var->expr_1->type_.substr(0, e_arr_var->expr_1->type_.length() - 2);
+    e_arr_var->is_lvalue_ = true;
+    e_arr_var->is_always_false_ = false;
+    e_arr_var->is_always_true_ = false;
+    e_arr_var->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
@@ -281,6 +542,14 @@ void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
     /* Code For ELitInt Goes Here */
 
     visitInteger(e_lit_int->integer_);
+
+    e_lit_int->type_ = "int";
+    e_lit_int->is_lvalue_ = false;
+    e_lit_int->is_always_false_ = false;
+    e_lit_int->is_always_true_ = false;
+    e_lit_int->has_value_ = true;
+
+    e_lit_int->value_ = e_lit_int->integer_;
 }
 
 void SemAnalysisVisitor::visitEString(EString *e_string)
@@ -288,59 +557,147 @@ void SemAnalysisVisitor::visitEString(EString *e_string)
     /* Code For EString Goes Here */
 
     visitString(e_string->string_);
+
+    e_string->type_ = "string";
+    e_string->is_lvalue_ = false;
+    e_string->is_always_false_ = false;
+    e_string->is_always_true_ = false;
+    e_string->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
 {
     /* Code For ELitTrue Goes Here */
+    e_lit_true->type_ = "boolean";
+    e_lit_true->is_lvalue_ = false;
+    e_lit_true->is_always_false_ = false;
+    e_lit_true->is_always_true_ = true;
+    e_lit_true->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
 {
     /* Code For ELitFalse Goes Here */
+    e_lit_false->type_ = "boolean";
+    e_lit_false->is_lvalue_ = false;
+    e_lit_false->is_always_false_ = true;
+    e_lit_false->is_always_true_ = false;
+    e_lit_false->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
 {
     /* Code For ELitNull Goes Here */
+    e_lit_null->type_ = "void";
+    e_lit_null->is_lvalue_ = false;
+    e_lit_null->is_always_false_ = false;
+    e_lit_null->is_always_true_ = false;
+    e_lit_null->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
 {
     /* Code For EApp Goes Here */
+    e_app->type_ = GlobalSymbols::getInstance().getFunctionType(e_app->ident_);
 
     visitIdent(e_app->ident_);
     e_app->listexpr_->accept(this);
+
+    auto args = GlobalSymbols::getInstance().getFunctionArgs(e_app->ident_);
+
+    if (e_app->listexpr_->size() != args->size())
+    {
+        std::string error = e_app->ident_ + " function requires " + std::to_string(args->size()) +
+            " arguments, provided: " + std::to_string(e_app->listexpr_->size()) + "!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    for (int i = 0; i < args->size(); ++ i)
+    {
+        if (e_app->listexpr_->at(i)->type_ != args->at(i)->getType())
+        {
+        std::string error = e_app->ident_ + " function's " + std::to_string(i + 1) + 
+            " argument needs to be of type: " + args->at(i)->getType() +
+            ", provided: " + e_app->listexpr_->at(i)->type_ + "!\n";
+        throw std::invalid_argument(error.c_str());
+        }
+    }
+
+    // TODO It depends on what function returns!
+    e_app->is_lvalue_ = false;
+    e_app->is_always_false_ = false;
+    e_app->is_always_true_ = false;
+    e_app->has_value_ = false;
+
 }
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
 {
     /* Code For EClsApp Goes Here */
 
-    e_cls_app->expr_->accept(this);
-    visitIdent(e_cls_app->ident_);
-    e_cls_app->listexpr_->accept(this);
+    //e_cls_app->expr_->accept(this);
+    //visitIdent(e_cls_app->ident_);
+    //e_cls_app->listexpr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
 {
     /* Code For ENeg Goes Here */
-
     e_neg->expr_->accept(this);
+    e_neg->type_ = "int";
+
+    if (e_neg->expr_->type_ != "int")
+    {
+        std::string error = "Negation operation can be performed only using int parameter!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_neg->is_lvalue_ = false;
+    e_neg->is_always_false_ = false;
+    e_neg->is_always_true_ = false;
+    e_neg->has_value_ = e_neg->expr_->has_value_;
+    e_neg->value_ = e_neg->expr_->value_;
 }
 
 void SemAnalysisVisitor::visitENot(ENot *e_not)
 {
     /* Code For ENot Goes Here */
-
     e_not->expr_->accept(this);
+
+    e_not->type_ = "boolean";
+
+    if (e_not->expr_->type_ != "boolean")
+    {
+        std::string error = "Not operation can be performed only using boolean parameter!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_not->is_lvalue_ = false;
+
+    if (e_not->expr_->is_always_false_)
+    {
+        e_not->is_always_false_ = false;
+        e_not->is_always_true_ = true;
+    }
+    else if (e_not->expr_->is_always_true_)
+    {
+        e_not->is_always_false_ = true;
+        e_not->is_always_true_ = false;
+    }
+    else
+    {
+        e_not->is_always_false_ = false;
+        e_not->is_always_true_ = false;
+    }
+
+    e_not->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarNew(EVarNew *e_var_new)
 {
     /* Code For EVarNew Goes Here */
 
-    visitIdent(e_var_new->ident_);
+    //visitIdent(e_var_new->ident_);
 }
 
 void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
@@ -348,14 +705,20 @@ void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
     /* Code For EVStdNew Goes Here */
 
     ev_std_new->stdtype_->accept(this);
+    ev_std_new->type_ = ev_std_new->stdtype_->get();
+
+    ev_std_new->is_lvalue_ = false;
+    ev_std_new->is_always_false_ = false;
+    ev_std_new->is_always_true_ = false;
+    ev_std_new->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEArrNew(EArrNew *e_arr_new)
 {
     /* Code For EArrNew Goes Here */
 
-    visitIdent(e_arr_new->ident_);
-    e_arr_new->expr_->accept(this);
+    //visitIdent(e_arr_new->ident_);
+    //e_arr_new->expr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
@@ -364,38 +727,51 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
 
     ea_std_new->stdtype_->accept(this);
     ea_std_new->expr_->accept(this);
+
+    if (ea_std_new->expr_->type_ != "int")
+    {
+        std::string error = "New operation for arrays can be performed only using int parameter!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    ea_std_new->type_ = ea_std_new->stdtype_->get() + "[]";
+    ea_std_new->is_lvalue_ = false;
+    ea_std_new->is_always_false_ = false;
+    ea_std_new->is_always_true_ = false;
+    ea_std_new->has_value_ = false;
+
 }
 
 void SemAnalysisVisitor::visitEVarCast(EVarCast *e_var_cast)
 {
     /* Code For EVarCast Goes Here */
 
-    visitIdent(e_var_cast->ident_);
-    e_var_cast->expr_->accept(this);
+    //visitIdent(e_var_cast->ident_);
+    //e_var_cast->expr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitEVStdCast(EVStdCast *ev_std_cast)
 {
     /* Code For EVStdCast Goes Here */
 
-    ev_std_cast->stdtype_->accept(this);
-    ev_std_cast->expr_->accept(this);
+    //ev_std_cast->stdtype_->accept(this);
+    //ev_std_cast->expr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitEArrCast(EArrCast *e_arr_cast)
 {
     /* Code For EArrCast Goes Here */
 
-    visitIdent(e_arr_cast->ident_);
-    e_arr_cast->expr_->accept(this);
+    //visitIdent(e_arr_cast->ident_);
+   // e_arr_cast->expr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitEAStdCast(EAStdCast *ea_std_cast)
 {
     /* Code For EAStdCast Goes Here */
 
-    ea_std_cast->stdtype_->accept(this);
-    ea_std_cast->expr_->accept(this);
+    //ea_std_cast->stdtype_->accept(this);
+    //ea_std_cast->expr_->accept(this);
 }
 
 void SemAnalysisVisitor::visitEMul(EMul *e_mul)
@@ -405,6 +781,39 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     e_mul->expr_1->accept(this);
     e_mul->mulop_->accept(this);
     e_mul->expr_2->accept(this);
+
+    if (e_mul->expr_1->type_ != "int" ||
+        e_mul->expr_2->type_ != "int")
+    {
+        std::string error = "Multiplication operation can be performed only using two int parameters!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_mul->type_ = "int";
+
+    e_mul->is_lvalue_ = false;
+    e_mul->is_always_false_ = false;
+    e_mul->is_always_true_ = false;
+
+    auto is_mul = dynamic_cast<Times*>(e_mul->mulop_);
+    auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
+    auto is_mod = dynamic_cast<Mod*>(e_mul->mulop_);
+
+    e_mul->has_value_ = e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_;
+
+    if (is_mul != nullptr && e_mul->has_value_)
+        e_mul->value_ = e_mul->expr_1->value_ * e_mul->expr_2->value_;
+    if (is_div != nullptr && e_mul->has_value_)
+    {
+        if (e_mul->expr_2->value_ == 0)
+        {
+            throw std::invalid_argument("Numbers cannot be divided by 0!\n");
+        }
+
+        e_mul->value_ = e_mul->expr_1->value_ / e_mul->expr_2->value_;
+    }
+    if (is_mod != nullptr && e_mul->has_value_)
+        e_mul->value_ = e_mul->expr_1->value_ % e_mul->expr_2->value_;
 }
 
 void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
@@ -414,6 +823,45 @@ void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
     e_add->expr_1->accept(this);
     e_add->addop_->accept(this);
     e_add->expr_2->accept(this);
+
+    auto is_plus = dynamic_cast<Plus*>(e_add->addop_);
+
+    if (e_add->expr_1->type_ == "string" &&
+        e_add->expr_2->type_ == "string" &&
+        is_plus != nullptr)
+    {
+        e_add->type_ = "string";
+    }
+    else if (e_add->expr_1->type_ == "int" &&
+             e_add->expr_2->type_ == "int")
+    {
+        e_add->type_ = "int";
+    }
+    else
+    {
+        if (is_plus != nullptr)
+        {
+            std::string error = "Add operation can be performed only using two int or two string parameters!\n";
+            throw std::invalid_argument(error.c_str());
+        }
+        else
+        {
+            std::string error = "Substracting operation can be performed only using two int parameters!\n";
+            throw std::invalid_argument(error.c_str());
+        }
+    }
+
+    e_add->is_lvalue_ = false;
+    e_add->is_always_false_ = false;
+    e_add->is_always_true_ = false;
+
+    e_add->has_value_ = e_add->expr_1->has_value_ && e_add->expr_2->has_value_;
+
+    if (is_plus != nullptr)
+        e_add->value_ = e_add->expr_1->value_ + e_add->expr_2->value_;
+    else
+        e_add->value_ = e_add->expr_1->value_ - e_add->expr_2->value_;
+
 }
 
 void SemAnalysisVisitor::visitERel(ERel *e_rel)
@@ -423,6 +871,174 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
     e_rel->expr_1->accept(this);
     e_rel->relop_->accept(this);
     e_rel->expr_2->accept(this);
+
+    auto is_eq = dynamic_cast<EQU*>(e_rel->relop_);
+    auto is_neq = dynamic_cast<NE*>(e_rel->relop_);
+    auto is_lt = dynamic_cast<LTH*>(e_rel->relop_);
+    auto is_le = dynamic_cast<LE*>(e_rel->relop_);
+    auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
+    auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
+
+    bool is_ok = false;
+
+    e_rel->is_always_false_ = false;
+    e_rel->is_always_true_ = false;
+
+    if (is_eq != nullptr || is_neq != nullptr)
+    {
+        if (e_rel->expr_1->type_ == "int" &&
+            e_rel->expr_2->type_ == "int")
+        {
+            is_ok = true;
+
+            if (e_rel->expr_1->has_value_ && e_rel->expr_2->has_value_)
+            {
+                if (is_eq != nullptr)
+                {
+                    if (e_rel->expr_1->value_ == e_rel->expr_2->value_)
+                    {
+                        e_rel->is_always_false_ = false;
+                        e_rel->is_always_true_ = true;
+                    }
+                    else
+                    {
+                        e_rel->is_always_false_ = true;
+                        e_rel->is_always_true_ = false;
+                    }
+                }
+                else
+                {
+                    if (e_rel->expr_1->value_ == e_rel->expr_2->value_)
+                    {
+                        e_rel->is_always_false_ = true;
+                        e_rel->is_always_true_ = false;
+                    }
+                    else
+                    {
+                        e_rel->is_always_false_ = false;
+                        e_rel->is_always_true_ = true;
+                    }
+                }
+            }
+        }
+
+        if (e_rel->expr_1->type_ == "boolean" &&
+            e_rel->expr_2->type_ == "boolean")
+        {
+            is_ok = true;
+
+            if (is_eq != nullptr)
+            {
+                if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_true_) ||
+                    (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_false_))
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_false_) ||
+                         (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_true_))
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+
+            if (is_neq != nullptr)
+            {
+                if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_true_) ||
+                    (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_false_))
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+                else if ((e_rel->expr_1->is_always_true_ && e_rel->expr_2->is_always_false_) ||
+                         (e_rel->expr_1->is_always_false_ && e_rel->expr_2->is_always_true_))
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+            }
+        }
+
+        if (!is_ok)
+        {
+            std::string error = "Relation operation can be performed only using two int or two boolean parameters!\n";
+            throw std::invalid_argument(error.c_str());
+        }
+    }
+    else if (e_rel->expr_1->type_ == "int" ||
+             e_rel->expr_2->type_ == "int")
+    {
+        is_ok = true;
+
+        if (e_rel->expr_1->has_value_ && e_rel->expr_2->has_value_)
+        {
+            if (is_lt != nullptr)
+            {
+                if (e_rel->expr_1->value_ < e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+            else if (is_le != nullptr)
+            {
+                if (e_rel->expr_1->value_ <= e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+            else if (is_gt != nullptr)
+            {
+                if (e_rel->expr_1->value_ > e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+            else if (is_ge != nullptr)
+            {
+                if (e_rel->expr_1->value_ >= e_rel->expr_2->value_)
+                {
+                    e_rel->is_always_false_ = false;
+                    e_rel->is_always_true_ = true;
+                }
+                else
+                {
+                    e_rel->is_always_false_ = true;
+                    e_rel->is_always_true_ = false;
+                }
+            }
+        }
+    }
+
+    if (!is_ok)
+    {
+        std::string error = "Relation operation can be performed only using two int parameters!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_rel->type_ = "boolean";
+    e_rel->is_lvalue_ = false;
+    e_rel->has_value_ = false;
+
+    // TODO - trivial boolean formula here
 }
 
 void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
@@ -431,6 +1047,34 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
 
     e_and->expr_1->accept(this);
     e_and->expr_2->accept(this);
+
+    if (e_and->expr_1->type_ != "boolean" ||
+        e_and->expr_2->type_ != "boolean")
+    {
+        std::string error = "And operation can be performed only using two boolean parameters!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_and->type_ = "boolean";
+    e_and->is_lvalue_ = false;
+
+    if (e_and->expr_1->is_always_false_ || e_and->expr_2->is_always_false_)
+    {
+        e_and->is_always_false_ = true;
+        e_and->is_always_true_ = false;
+    }
+    else if (e_and->expr_1->is_always_true_ && e_and->expr_2->is_always_true_)
+    {
+        e_and->is_always_false_ = false;
+        e_and->is_always_true_ = true;
+    }
+    else
+    {
+        e_and->is_always_false_ = false;
+        e_and->is_always_true_ = false;
+    }
+
+    e_and->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitEOr(EOr *e_or)
@@ -439,6 +1083,34 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
 
     e_or->expr_1->accept(this);
     e_or->expr_2->accept(this);
+
+    if (e_or->expr_1->type_ != "boolean" ||
+        e_or->expr_2->type_ != "boolean")
+    {
+        std::string error = "Or operation can be performed only using two boolean parameters!\n";
+        throw std::invalid_argument(error.c_str());
+    }
+
+    e_or->type_ = "boolean";
+    e_or->is_lvalue_ = false;
+
+    if (e_or->expr_1->is_always_true_ || e_or->expr_2->is_always_true_)
+    {
+        e_or->is_always_false_ = false;
+        e_or->is_always_true_ = true;
+    }
+    else if (e_or->expr_1->is_always_false_ && e_or->expr_2->is_always_false_)
+    {
+        e_or->is_always_false_ = true;
+        e_or->is_always_true_ = false;
+    }
+    else
+    {
+        e_or->is_always_false_ = false;
+        e_or->is_always_true_ = false;
+    }
+
+    e_or->has_value_ = false;
 }
 
 void SemAnalysisVisitor::visitPlus(Plus *plus)
@@ -532,6 +1204,11 @@ void SemAnalysisVisitor::visitListStmt(ListStmt *list_stmt)
 {
     for (ListStmt::iterator i = list_stmt->begin(); i != list_stmt->end(); ++i)
     {
+        if (ControlFlow::getInstance().wasIf())
+        {
+            ControlFlow::getInstance().addMissingBlock();
+        }
+
         (*i)->accept(this);
     }
 }
@@ -540,6 +1217,7 @@ void SemAnalysisVisitor::visitListItem(ListItem *list_item)
 {
     for (ListItem::iterator i = list_item->begin(); i != list_item->end(); ++i)
     {
+        (*i)->type_ = list_item->type_;
         (*i)->accept(this);
     }
 }
@@ -562,7 +1240,7 @@ void SemAnalysisVisitor::visitListExpr(ListExpr *list_expr)
 
 void SemAnalysisVisitor::visitInteger(Integer x)
 {
-    /* Code for Integer Goes Here */
+
 }
 
 void SemAnalysisVisitor::visitChar(Char x)

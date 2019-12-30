@@ -5,6 +5,9 @@
 #include "Printer.h"
 #include "Absyn.h"
 #include "SemAnalysisVisitor.h"
+#include "GlobalSymbolsCollector.h"
+#include "GlobalSymbols.h"
+#include "ControlFlow.h"
 
 
 void usage()
@@ -54,7 +57,20 @@ int main(int argc, char **argv)
     else
         input = stdin;
 
-    Program *parse_tree = pProgram(input);
+    Program *parse_tree;
+
+    try
+    {
+        parse_tree = pProgram(input);
+    }
+    catch (std::out_of_range &e)
+    {
+        fprintf(stderr, "ERROR\n");
+        fprintf(stderr, "Integer value should be greater or equal -2147483648 and"
+                        " less or equal 2147483647!\n");
+        return 1;
+    }
+
     if (parse_tree)
     {
         printf("\nParse Succesful!\n");
@@ -70,10 +86,36 @@ int main(int argc, char **argv)
             printf("%s\n\n", p->print(parse_tree));
             delete p;
 
-            SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
-            sem_analysis->visitProgram(parse_tree);
+            try
+            {
+                GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
+                GlobalSymbols::getInstance().addLibFunctions();
+                symbols_collector->visitProgram(parse_tree);
+                delete symbols_collector;
+
+                if (GlobalSymbols::getInstance().areCorrect())
+                {
+                    fprintf(stderr, "GlobalSymbols are correct!\n");
+                    SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
+                    sem_analysis->visitProgram(parse_tree);
+                    delete sem_analysis;
+                }
+
+                ControlFlow::getInstance().checkFlow();
+
+                GlobalSymbols::getInstance().prettyPrint();
+                ControlFlow::getInstance().prettyPrint();
+            }
+            catch (const std::invalid_argument& e)
+            {
+                fprintf(stderr, "ERROR\n");
+                fprintf(stderr, "%s\n", e.what());
+                return 1;
+            }
         }
+
         return 0;
     }
+
     return 1;
 }

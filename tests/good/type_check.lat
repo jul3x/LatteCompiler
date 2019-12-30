@@ -1,0 +1,15 @@
+int main() {
+    int a;
+    boolean b;
+    string c;
+
+    int[] d;
+    boolean[] e;
+    string[] f;
+
+    return 0;
+}
+
+void f() {
+
+}

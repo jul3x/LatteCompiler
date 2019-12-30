@@ -311,6 +311,14 @@ Ar *Ar::clone() const
     return new Ar(*this);
 }
 
+std::string Ar::getType() const {
+    return type_->get();
+}
+
+std::string Ar::getIdent() const {
+    return ident_;
+}
+
 /********************   Blk    ********************/
 Blk::Blk(ListStmt *p1)
 {
@@ -982,6 +990,10 @@ Int *Int::clone() const
     return new Int(*this);
 }
 
+std::string Int::get() const {
+    return "int";
+}
+
 /********************   Str    ********************/
 Str::Str()
 {
@@ -1014,6 +1026,10 @@ void Str::accept(Visitor *v)
 Str *Str::clone() const
 {
     return new Str(*this);
+}
+
+std::string Str::get() const {
+    return "string";
 }
 
 /********************   Bool    ********************/
@@ -1050,6 +1066,10 @@ Bool *Bool::clone() const
     return new Bool(*this);
 }
 
+std::string Bool::get() const {
+    return "boolean";
+}
+
 /********************   Void    ********************/
 Void::Void()
 {
@@ -1082,6 +1102,10 @@ void Void::accept(Visitor *v)
 Void *Void::clone() const
 {
     return new Void(*this);
+}
+
+std::string Void::get() const {
+    return "void";
 }
 
 /********************   StVarType    ********************/
@@ -1122,6 +1146,10 @@ StVarType *StVarType::clone() const
     return new StVarType(*this);
 }
 
+std::string StVarType::get() const {
+    return stdtype_->get();
+}
+
 /********************   StArrType    ********************/
 StArrType::StArrType(StdType *p1)
 {
@@ -1158,6 +1186,10 @@ void StArrType::accept(Visitor *v)
 StArrType *StArrType::clone() const
 {
     return new StArrType(*this);
+}
+
+std::string StArrType::get() const {
+    return stdtype_->get() + "[]";
 }
 
 /********************   VarType    ********************/
@@ -1197,6 +1229,10 @@ VarType *VarType::clone() const
     return new VarType(*this);
 }
 
+std::string VarType::get() const {
+    return ident_;
+}
+
 /********************   ArrType    ********************/
 ArrType::ArrType(Ident p1)
 {
@@ -1232,6 +1268,10 @@ void ArrType::accept(Visitor *v)
 ArrType *ArrType::clone() const
 {
     return new ArrType(*this);
+}
+
+std::string ArrType::get() const {
+    return ident_ + "[]";
 }
 
 /********************   Fun    ********************/
@@ -1274,6 +1314,10 @@ void Fun::accept(Visitor *v)
 Fun *Fun::clone() const
 {
     return new Fun(*this);
+}
+
+std::string Fun::get() const {
+    return type_->get() + "(" + listtype_->get() + ")";
 }
 
 /********************   EVar    ********************/
@@ -2702,6 +2746,46 @@ ListArg *ListArg::clone() const
     return new ListArg(*this);
 }
 
+std::string ListArg::printTypes() const {
+    if (this->empty())
+    {
+        return "";
+    }
+
+    std::string out;
+    for (const auto &arg : *this)
+    {
+        out = out + arg->getType() + ", ";
+    }
+
+    out.pop_back();
+    out.pop_back();
+
+    return out;
+}
+
+std::vector<std::string> ListArg::getTypes() const {
+    std::vector<std::string> out;
+
+    for (const auto &arg : *this)
+    {
+        out.push_back(arg->getType());
+    }
+
+    return out;
+}
+
+std::vector<std::string> ListArg::getIdents() const {
+    std::vector<std::string> out;
+
+    for (const auto &arg : *this)
+    {
+        out.push_back(arg->getIdent());
+    }
+
+    return out;
+}
+
 /********************   ListStmt    ********************/
 
 void ListStmt::accept(Visitor *v)
@@ -2736,6 +2820,24 @@ void ListType::accept(Visitor *v)
 ListType *ListType::clone() const
 {
     return new ListType(*this);
+}
+
+std::string ListType::get() const {
+    if (this->empty())
+    {
+        return "";
+    }
+
+    std::string out;
+    for (const auto &type : *this)
+    {
+        out = out + type->get() + ", ";
+    }
+
+    out.pop_back();
+    out.pop_back();
+
+    return out;
 }
 
 /********************   ListExpr    ********************/

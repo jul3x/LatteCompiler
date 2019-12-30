@@ -1,0 +1,27 @@
+class A {
+    int a;
+}
+
+class B extends A {
+    int b;
+}
+
+class C extends A {
+    int c;
+}
+
+class D extends F {
+    int z;
+}
+
+class E extends D {
+    int e;
+}
+
+class F extends E {
+    int y;
+}
+
+int main () {
+    return 0;
+}
