@@ -31,9 +31,10 @@ void SemAnalysisVisitor::visitProg(Prog *prog)
 void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 {
     /* Code For FnDef Goes Here */
+    LocalSymbols::getInstance().reset();
     LocalSymbols::getInstance().enterBlock();
 
-    ControlFlow::getInstance().newFunction(fn_def->type_->get());
+    ControlFlow::getInstance().newFunction(fn_def->ident_, fn_def->type_->get());
 
     fn_def->type_->accept(this);
 
@@ -97,6 +98,14 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
     }
 
     LocalSymbols::getInstance().append(ar->ident_, ar->type_->get());
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(ar->ident_);
+    GlobalSymbols::getInstance().appendLocals(function_name, ar->ident_,
+                                              ar->type_->get(), index_of_var);
+
+    ar->index_of_var_ = index_of_var;
+    ar->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitBlk(Blk *blk)
@@ -366,6 +375,11 @@ void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
     }
 
     LocalSymbols::getInstance().append(no_init->ident_, no_init->type_);
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(no_init->ident_);
+    GlobalSymbols::getInstance().appendLocals(function_name, no_init->ident_,
+                                              no_init->type_, index_of_var);
 }
 
 void SemAnalysisVisitor::visitInit(Init *init)
@@ -388,6 +402,14 @@ void SemAnalysisVisitor::visitInit(Init *init)
     }
 
     LocalSymbols::getInstance().append(init->ident_, init->type_);
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(init->ident_);
+    GlobalSymbols::getInstance().appendLocals(function_name, init->ident_,
+                                              init->type_, index_of_var);
+
+    init->index_of_var_ = index_of_var;
+    init->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitInt(Int *int_)
@@ -456,6 +478,12 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
     e_var->is_always_false_ = false;
     e_var->is_always_true_ = false;
     e_var->has_value_ = false;
+
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(e_var->ident_);
+
+    e_var->index_of_var_ = index_of_var;
+    e_var->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)

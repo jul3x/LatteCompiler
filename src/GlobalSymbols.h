@@ -2,6 +2,7 @@
 #define GLOBALSYMBOLS_HEADER
 
 #include <unordered_map>
+#include <set>
 #include <tuple>
 #include <string>
 
@@ -9,8 +10,10 @@
 
 class GlobalSymbols
 {
+
 public:
-    using FunctionType = std::pair<Type*, ListArg*>;
+    using Locals = std::set<std::tuple<std::string, std::string, int>>;
+    using FunctionType = std::tuple<Type*, ListArg*, Locals>;
     using ClassParent = std::string;
 
     static GlobalSymbols& getInstance() {
@@ -40,7 +43,7 @@ public:
                     ListArg *args) {
         if (checkExistance(ident))
         {
-            functions_.emplace(std::make_pair(ident, std::make_pair(type, args)));
+            functions_.emplace(std::make_pair(ident, std::make_tuple(type, args, Locals{})));
         }
     }
 
@@ -49,6 +52,21 @@ public:
         if (checkExistance(ident))
         {
             classes_.emplace(std::make_pair(ident, parent));
+        }
+    }
+
+    void appendLocals(const std::string &fn_ident, const std::string &loc_ident,
+                      const std::string &type, int index) {
+        auto function = functions_.find(fn_ident);
+
+        if (function != functions_.end())
+        {
+            std::get<2>(function->second).insert({loc_ident, type, index});
+        }
+        else
+        {
+            std::string error = "Identifier " + fn_ident + " does not exists as a function name!\n";
+            throw std::invalid_argument(error.c_str());
         }
     }
 
@@ -75,7 +93,7 @@ public:
 
         if (function != functions_.end())
         {
-            return function->second.first->get();
+            return std::get<0>(function->second)->get();
         }
         else
         {
@@ -89,12 +107,25 @@ public:
 
         if (function != functions_.end())
         {
-            return function->second.second;
+            return std::get<1>(function->second);
         }
         else
         {
             std::string error = "Identifier " + ident + " does not exists as a function name!\n";
             throw std::invalid_argument(error.c_str());
+        }
+    }
+
+    void prettyPrint() const {
+        for (const auto &function : functions_)
+        {
+            fprintf(stderr, "\n%s: \n", function.first.c_str());
+
+            for (const auto &local : std::get<2>(function.second))
+            {
+                fprintf(stderr, "%s %s, %d\n",
+                    std::get<0>(local).c_str(), std::get<1>(local).c_str(), std::get<2>(local));
+            }
         }
     }
 
@@ -142,13 +173,13 @@ private:
         }
         else
         {
-            if (it->second.first->get() != "int")
+            if (std::get<0>(it->second)->get() != "int")
             {
                 std::string error = "Main function should return int!\n";
                 throw std::invalid_argument(error.c_str());
             }
 
-            if (!it->second.second->getTypes().empty())
+            if (!std::get<1>(it->second)->getTypes().empty())
             {
                 std::string error = "Main function should not take any arguments!\n";
                 throw std::invalid_argument(error.c_str());

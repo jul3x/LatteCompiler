@@ -15,12 +15,17 @@ public:
         return instance;
     }
 
-    void newFunction(const std::string &ret_type) {
+    void newFunction(const std::string &name, const std::string &ret_type) {
         simple_blocks_.emplace_back();
+        function_names_.emplace_back(name);
         ret_types_.emplace_back(ret_type);
         termination_.emplace_back();
         reachable_.emplace_back();
         addBlock();
+    }
+
+    const std::string& getCurrentFunctionName() const {
+        return function_names_.back();
     }
 
     void addBlock() {
@@ -136,6 +141,9 @@ private:
 
     // Functions return types
     std::vector<std::string> ret_types_;
+
+    // Functions names
+    std::vector<std::string> function_names_;
 
     // True if block in function was terminated by return
     std::vector<std::vector<bool>> termination_;

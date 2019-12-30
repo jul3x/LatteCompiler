@@ -414,6 +414,9 @@ public:
     Type *type_;
     Ident ident_;
 
+    int index_of_var_;
+    std::string function_name_;
+
     Ar(const Ar &);
     Ar &operator=(const Ar &);
     Ar(Type *p1, Ident p2);
@@ -647,6 +650,9 @@ public:
     Ident ident_;
     Expr *expr_;
 
+    int index_of_var_;
+    std::string function_name_;
+
     Init(const Init &);
     Init &operator=(const Init &);
     Init(Ident p1, Expr *p2);
@@ -797,6 +803,9 @@ class EVar : public Expr
 {
 public:
     Ident ident_;
+
+    int index_of_var_;
+    std::string function_name_;
 
     EVar(const EVar &);
     EVar &operator=(const EVar &);

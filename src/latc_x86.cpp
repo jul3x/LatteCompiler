@@ -87,7 +87,10 @@ int main(int argc, char **argv)
                     sem_analysis->visitProgram(parse_tree);
                     delete sem_analysis;
                 }
+
                 ControlFlow::getInstance().checkFlow();
+
+                GlobalSymbols::getInstance().prettyPrint();
             }
             catch (const std::invalid_argument& e)
             {
