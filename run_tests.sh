@@ -14,11 +14,11 @@ function check()
     do
         echo "$f:"
         ./latc_x86 $f >> /dev/null
-        if [[ $? -eq $2 ]] ; then
-	    ERROR=1
-            echo -e "\033[31mERROR!\e[0m"
-        else
+        if [[ $? -ne $2 ]] ; then
             echo -e "\e[92mOK!\e[0m"
+        else
+            ERROR=1
+            echo -e "\033[31mERROR!\e[0m"
         fi
     done
 

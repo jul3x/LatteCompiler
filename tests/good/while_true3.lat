@@ -1,0 +1,11 @@
+// Author: Julian Prolejko 420564
+int main() {
+    while (true) {
+        int x;
+        x = readInt();
+        if (x == 1)
+            printString("jeszcze raz");
+        else
+            return 0;
+    }
+}

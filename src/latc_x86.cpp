@@ -104,6 +104,7 @@ int main(int argc, char **argv)
                 ControlFlow::getInstance().checkFlow();
 
                 GlobalSymbols::getInstance().prettyPrint();
+                ControlFlow::getInstance().prettyPrint();
             }
             catch (const std::invalid_argument& e)
             {

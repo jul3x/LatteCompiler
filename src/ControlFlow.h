@@ -24,6 +24,14 @@ public:
         addBlock();
     }
 
+    void enterInfiniteLoop() {
+        infinite_loops_.push_back(getCurrentBlock());
+    }
+
+    void exitInfiniteLoop() {
+        infinite_loops_.pop_back();
+    }
+
     const std::string& getCurrentFunctionName() const {
         return function_names_.back();
     }
@@ -35,8 +43,7 @@ public:
         was_if_ = false;
     }
 
-    void addVirtualBlock(int p1, int p2)
-    {
+    void addVirtualBlock(int p1, int p2) {
         virtual_p1_ = p1;
         virtual_p2_ = p2;
 
@@ -75,6 +82,13 @@ public:
         }
 
         termination_.back().back() = true;
+
+        for (const auto &loop : infinite_loops_)
+        {
+            termination_.back().at(loop) = true;
+            while_block_ = loop < while_block_ ? loop : while_block_;
+            while_block_term_ = true;
+        }
     }
 
     void prettyPrint() {
@@ -124,7 +138,7 @@ public:
 
 
 private:
-    ControlFlow() = default;
+    ControlFlow() : while_block_term_(false) {}
 
     void setNonReachablePoints(int fun) {
         reachable_.at(fun).at(0) = true;
@@ -133,6 +147,14 @@ private:
         {
             for (const auto &child : vertex)
                 reachable_.at(fun).at(child) = true;
+        }
+
+        if (while_block_term_)
+        {
+            for (size_t i = while_block_; i < reachable_.at(fun).size(); ++i)
+            {
+                reachable_.at(fun).at(i) = false;
+            }
         }
     }
 
@@ -151,8 +173,13 @@ private:
     // True if block in function is reachable
     std::vector<std::vector<bool>> reachable_;
 
+    std::vector<int> infinite_loops_;
+
     int virtual_p1_, virtual_p2_;
     bool was_if_;
+
+    int while_block_;
+    bool while_block_term_;
 
 };
 

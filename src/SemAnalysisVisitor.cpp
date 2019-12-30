@@ -325,7 +325,18 @@ void SemAnalysisVisitor::visitWhile(While *while_)
         throw std::invalid_argument(error.c_str());
     }
 
+    // infinite loop
+    if (while_->expr_->is_always_true_)
+    {
+        ControlFlow::getInstance().enterInfiniteLoop();
+    }
+
     while_->stmt_->accept(this);
+
+    if (while_->expr_->is_always_true_)
+    {
+        ControlFlow::getInstance().exitInfiniteLoop();
+    }
 }
 
 void SemAnalysisVisitor::visitFor(For *for_)
