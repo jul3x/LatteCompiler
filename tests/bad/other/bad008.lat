@@ -1,4 +1,6 @@
-  int main() { 
+  int main() {
+    if ("el" > 0) return 0;
+  
     if (false)
        return 0; 
 }

@@ -15,9 +15,9 @@ public:
         return instance;
     }
 
-    void newFunction(const std::string &name, const std::string &ret_type) {
+    void newFunction(const std::string &name, const std::string &ret_type, int line_number) {
         simple_blocks_.emplace_back();
-        function_names_.emplace_back(name);
+        function_names_.emplace_back(name, line_number);
         ret_types_.emplace_back(ret_type);
         termination_.emplace_back();
         reachable_.emplace_back();
@@ -33,7 +33,11 @@ public:
     }
 
     const std::string& getCurrentFunctionName() const {
-        return function_names_.back();
+        return function_names_.back().first;
+    }
+
+    const std::string& getCurrentFunctionType() const {
+        return ret_types_.back();
     }
 
     void addBlock() {
@@ -73,14 +77,7 @@ public:
             simple_blocks_.back().at(block).emplace(child);
     }
 
-    void setTermination(const std::string &type) {
-        if (type != ret_types_.back())
-        {
-            std::string error = "Return type " + type +
-                " does not match declared function return type: " + ret_types_.back() + "!\n";
-            throw std::invalid_argument(error);
-        }
-
+    bool setTermination(const std::string &type) {
         termination_.back().back() = true;
 
         for (const auto &loop : infinite_loops_)
@@ -89,6 +86,13 @@ public:
             while_block_ = loop < while_block_ ? loop : while_block_;
             while_block_term_ = true;
         }
+
+        if (type != ret_types_.back())
+        {
+            return false;
+        }
+
+        return true;
     }
 
     void prettyPrint() {
@@ -124,8 +128,11 @@ public:
                     vertex.empty() && !termination_.at(i).at(j) &&
                     reachable_.at(i).at(j))
                 {
-                    throw std::invalid_argument("Not every path in control flow graph"
-                                                " is properly terminated by return instruction!\n");
+                    std::string error = "Function \"" + function_names_.at(i).first + "\""
+                            " (line " + std::to_string(function_names_.at(i).second) + ")"
+                            " does not have appropriate termination by return statement"
+                            " in every path in control flow graph!\n";
+                    throw std::invalid_argument(error);
                 }
                 ++j;
             }
@@ -165,7 +172,7 @@ private:
     std::vector<std::string> ret_types_;
 
     // Functions names
-    std::vector<std::string> function_names_;
+    std::vector<std::pair<std::string, int>> function_names_;
 
     // True if block in function was terminated by return
     std::vector<std::vector<bool>> termination_;

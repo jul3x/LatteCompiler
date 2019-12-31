@@ -3,6 +3,7 @@
 %{
 #include <string.h>
 #include <cstdlib>
+#include <stdexcept>
 #include "Parser.h"
 #define YY_BUFFER_LENGTH 4096
 extern int yy_mylinenumber ;
@@ -87,7 +88,7 @@ IDENT [a-zA-Z0-9'_]
 <ESCAPED>\\      	 YY_BUFFER_APPEND("\\"); BEGIN STRING;
 <ESCAPED>t       	 YY_BUFFER_APPEND("\t"); BEGIN STRING;
 <ESCAPED>.       	 YY_BUFFER_APPEND(yytext); BEGIN STRING;
-<YYINITIAL>{DIGIT}+      	 yylval.int_ = std::stoi(yytext); return _INTEGER_;
+<YYINITIAL>{DIGIT}+      	 try {yylval.int_ = std::stoi(yytext); return _INTEGER_;} catch (...) { throw std::out_of_range(std::to_string(yy_mylinenumber)); }
 <YYINITIAL>{LETTER}{IDENT}*      	 yylval.string_ = strdup(yytext); return _IDENT_;
 \n  ++yy_mylinenumber ;
 <YYINITIAL>[ \t\r\n\f]      	 /* ignore white space. */;

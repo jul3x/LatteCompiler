@@ -537,6 +537,7 @@ char *yytext;
 #line 4 "src/Latte.l"
 #include <string.h>
 #include <cstdlib>
+#include <stdexcept>
 #include "Parser.h"
 #define YY_BUFFER_LENGTH 4096
 extern int yy_mylinenumber ;
@@ -551,9 +552,9 @@ static void YY_BUFFER_RESET(void)
     YY_PARSED_STRING[x] = 0;
 }
 
-#line 555 "src/Lexer.cpp"
+#line 556 "src/Lexer.cpp"
 
-#line 557 "src/Lexer.cpp"
+#line 558 "src/Lexer.cpp"
 
 #define INITIAL 0
 #define YYINITIAL 1
@@ -777,10 +778,10 @@ YY_DECL
 		}
 
 	{
-#line 28 "src/Latte.l"
+#line 29 "src/Latte.l"
 
 
-#line 784 "src/Lexer.cpp"
+#line 785 "src/Lexer.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -839,330 +840,330 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 30 "src/Latte.l"
+#line 31 "src/Latte.l"
 return _SYMB_0;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 31 "src/Latte.l"
+#line 32 "src/Latte.l"
 return _SYMB_1;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 32 "src/Latte.l"
+#line 33 "src/Latte.l"
 return _SYMB_2;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 33 "src/Latte.l"
+#line 34 "src/Latte.l"
 return _SYMB_3;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 34 "src/Latte.l"
+#line 35 "src/Latte.l"
 return _SYMB_4;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 35 "src/Latte.l"
+#line 36 "src/Latte.l"
 return _SYMB_5;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 36 "src/Latte.l"
+#line 37 "src/Latte.l"
 return _SYMB_6;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 37 "src/Latte.l"
+#line 38 "src/Latte.l"
 return _SYMB_7;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 38 "src/Latte.l"
+#line 39 "src/Latte.l"
 return _SYMB_8;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 39 "src/Latte.l"
+#line 40 "src/Latte.l"
 return _SYMB_9;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 40 "src/Latte.l"
+#line 41 "src/Latte.l"
 return _SYMB_10;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 41 "src/Latte.l"
+#line 42 "src/Latte.l"
 return _SYMB_11;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 42 "src/Latte.l"
+#line 43 "src/Latte.l"
 return _SYMB_12;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 43 "src/Latte.l"
+#line 44 "src/Latte.l"
 return _SYMB_13;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 44 "src/Latte.l"
+#line 45 "src/Latte.l"
 return _SYMB_14;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 45 "src/Latte.l"
+#line 46 "src/Latte.l"
 return _SYMB_15;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 46 "src/Latte.l"
+#line 47 "src/Latte.l"
 return _SYMB_16;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 47 "src/Latte.l"
+#line 48 "src/Latte.l"
 return _SYMB_17;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 48 "src/Latte.l"
+#line 49 "src/Latte.l"
 return _SYMB_18;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 49 "src/Latte.l"
+#line 50 "src/Latte.l"
 return _SYMB_19;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 50 "src/Latte.l"
+#line 51 "src/Latte.l"
 return _SYMB_20;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 51 "src/Latte.l"
+#line 52 "src/Latte.l"
 return _SYMB_21;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 52 "src/Latte.l"
+#line 53 "src/Latte.l"
 return _SYMB_22;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 53 "src/Latte.l"
+#line 54 "src/Latte.l"
 return _SYMB_23;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 54 "src/Latte.l"
+#line 55 "src/Latte.l"
 return _SYMB_24;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 55 "src/Latte.l"
+#line 56 "src/Latte.l"
 return _SYMB_25;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 56 "src/Latte.l"
+#line 57 "src/Latte.l"
 return _SYMB_26;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 57 "src/Latte.l"
+#line 58 "src/Latte.l"
 return _SYMB_27;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 58 "src/Latte.l"
+#line 59 "src/Latte.l"
 return _SYMB_28;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 59 "src/Latte.l"
+#line 60 "src/Latte.l"
 return _SYMB_29;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 60 "src/Latte.l"
+#line 61 "src/Latte.l"
 return _SYMB_30;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 61 "src/Latte.l"
+#line 62 "src/Latte.l"
 return _SYMB_31;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 62 "src/Latte.l"
+#line 63 "src/Latte.l"
 return _SYMB_32;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 63 "src/Latte.l"
+#line 64 "src/Latte.l"
 return _SYMB_33;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 64 "src/Latte.l"
+#line 65 "src/Latte.l"
 return _SYMB_34;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 65 "src/Latte.l"
+#line 66 "src/Latte.l"
 return _SYMB_35;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 66 "src/Latte.l"
+#line 67 "src/Latte.l"
 return _SYMB_36;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 67 "src/Latte.l"
+#line 68 "src/Latte.l"
 return _SYMB_37;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 68 "src/Latte.l"
+#line 69 "src/Latte.l"
 return _SYMB_38;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 69 "src/Latte.l"
+#line 70 "src/Latte.l"
 return _SYMB_39;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 70 "src/Latte.l"
+#line 71 "src/Latte.l"
 return _SYMB_40;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 71 "src/Latte.l"
+#line 72 "src/Latte.l"
 return _SYMB_41;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 72 "src/Latte.l"
+#line 73 "src/Latte.l"
 return _SYMB_42;
 	YY_BREAK
 case 44:
 /* rule 44 can match eol */
 YY_RULE_SETUP
-#line 74 "src/Latte.l"
+#line 75 "src/Latte.l"
 ++yy_mylinenumber; // BNFC: comment "#";
 	YY_BREAK
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 75 "src/Latte.l"
+#line 76 "src/Latte.l"
 ++yy_mylinenumber; // BNFC: comment "//";
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 76 "src/Latte.l"
+#line 77 "src/Latte.l"
 BEGIN COMMENT; // BNFC: comment "/*" "*/";
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 77 "src/Latte.l"
+#line 78 "src/Latte.l"
 BEGIN YYINITIAL;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 78 "src/Latte.l"
+#line 79 "src/Latte.l"
 /* skip */;
 	YY_BREAK
 case 49:
 /* rule 49 can match eol */
 YY_RULE_SETUP
-#line 79 "src/Latte.l"
+#line 80 "src/Latte.l"
 ++yy_mylinenumber;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 81 "src/Latte.l"
+#line 82 "src/Latte.l"
 BEGIN STRING;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 82 "src/Latte.l"
+#line 83 "src/Latte.l"
 BEGIN ESCAPED;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 83 "src/Latte.l"
+#line 84 "src/Latte.l"
 yylval.string_ = strdup(YY_PARSED_STRING); YY_BUFFER_RESET(); BEGIN YYINITIAL; return _STRING_;
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 84 "src/Latte.l"
+#line 85 "src/Latte.l"
 YY_BUFFER_APPEND(yytext);
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 85 "src/Latte.l"
+#line 86 "src/Latte.l"
 YY_BUFFER_APPEND("\n"); BEGIN STRING;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 86 "src/Latte.l"
+#line 87 "src/Latte.l"
 YY_BUFFER_APPEND("\""); BEGIN STRING ;
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 87 "src/Latte.l"
+#line 88 "src/Latte.l"
 YY_BUFFER_APPEND("\\"); BEGIN STRING;
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 88 "src/Latte.l"
+#line 89 "src/Latte.l"
 YY_BUFFER_APPEND("\t"); BEGIN STRING;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 89 "src/Latte.l"
+#line 90 "src/Latte.l"
 YY_BUFFER_APPEND(yytext); BEGIN STRING;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 90 "src/Latte.l"
-yylval.int_ = std::stoi(yytext); return _INTEGER_;
+#line 91 "src/Latte.l"
+try {yylval.int_ = std::stoi(yytext); return _INTEGER_;} catch (...) { throw std::out_of_range(std::to_string(yy_mylinenumber)); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 91 "src/Latte.l"
+#line 92 "src/Latte.l"
 yylval.string_ = strdup(yytext); return _IDENT_;
 	YY_BREAK
 case 61:
 /* rule 61 can match eol */
 YY_RULE_SETUP
-#line 92 "src/Latte.l"
+#line 93 "src/Latte.l"
 ++yy_mylinenumber ;
 	YY_BREAK
 case 62:
 /* rule 62 can match eol */
 YY_RULE_SETUP
-#line 93 "src/Latte.l"
+#line 94 "src/Latte.l"
 /* ignore white space. */;
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 94 "src/Latte.l"
+#line 95 "src/Latte.l"
 return _ERROR_;
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 95 "src/Latte.l"
+#line 96 "src/Latte.l"
 ECHO;
 	YY_BREAK
-#line 1166 "src/Lexer.cpp"
+#line 1167 "src/Lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(YYINITIAL):
 case YY_STATE_EOF(COMMENT):
@@ -2174,7 +2175,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 95 "src/Latte.l"
+#line 96 "src/Latte.l"
 
 void initialize_lexer(FILE *inp) { yyrestart(inp); BEGIN YYINITIAL; }
 int yywrap(void) { return 1; }
