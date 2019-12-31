@@ -18,7 +18,7 @@ public:
         return instance;
     }
 
-    void append(const std::string &ident,
+    bool append(const std::string &ident,
                 const std::string &type) {
         if (checkExistance(symbols_.back(), ident).first.empty())
         {
@@ -36,12 +36,11 @@ public:
             }
 
             symbols_.back().emplace(std::make_pair(ident, std::make_pair(type, index)));
+
+            return true;
         }
-        else
-        {
-            std::string error = "Identifier " + ident + " was already declared in this scope!\n";
-            throw std::invalid_argument(error.c_str());
-        }
+
+        return false;
     }
 
     void reset() {
@@ -72,7 +71,7 @@ public:
             }
         }
 
-        std::string error = "Identifier " + ident + " not found!\n";
+        std::string error = "Identifier " + ident + " not found!";
         throw std::invalid_argument(error.c_str());
     }
 
@@ -87,7 +86,7 @@ public:
             }
         }
 
-        std::string error = "Identifier " + ident + " not found!\n";
+        std::string error = "Identifier " + ident + " not found!";
         throw std::invalid_argument(error.c_str());
     }
 

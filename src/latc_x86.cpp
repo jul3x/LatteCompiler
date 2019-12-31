@@ -8,6 +8,7 @@
 #include "GlobalSymbolsCollector.h"
 #include "GlobalSymbols.h"
 #include "ControlFlow.h"
+#include "CompilerMsgs.h"
 
 
 void usage()
@@ -65,56 +66,43 @@ int main(int argc, char **argv)
     }
     catch (std::out_of_range &e)
     {
-        fprintf(stderr, "ERROR\n");
-        fprintf(stderr, "Integer value should be greater or equal -2147483648 and"
-                        " less or equal 2147483647!\n");
+        CompilerMsgs::getInstance().error(std::stoi(e.what()),
+              "Integer value should be greater or equal"
+              " -2147483648 and less or equal 2147483647!");
+
+        CompilerMsgs::getInstance().printErrorMsgs();
         return 1;
     }
 
     if (parse_tree)
     {
-        printf("\nParse Succesful!\n");
-        if (!quiet)
+        GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
+        GlobalSymbols::getInstance().addLibFunctions();
+        symbols_collector->visitProgram(parse_tree);
+        delete symbols_collector;
+
+        try
         {
-            printf("\n[Abstract Syntax]\n");
-            ShowAbsyn *s = new ShowAbsyn();
-            printf("%s\n\n", s->show(parse_tree));
-            printf("[Linearized Tree]\n");
-            delete s;
-
-            PrintAbsyn *p = new PrintAbsyn();
-            printf("%s\n\n", p->print(parse_tree));
-            delete p;
-
-            try
+            if (GlobalSymbols::getInstance().areCorrect())
             {
-                GlobalSymbolsCollector *symbols_collector = new GlobalSymbolsCollector();
-                GlobalSymbols::getInstance().addLibFunctions();
-                symbols_collector->visitProgram(parse_tree);
-                delete symbols_collector;
-
-                if (GlobalSymbols::getInstance().areCorrect())
-                {
-                    fprintf(stderr, "GlobalSymbols are correct!\n");
-                    SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
-                    sem_analysis->visitProgram(parse_tree);
-                    delete sem_analysis;
-                }
-
-                ControlFlow::getInstance().checkFlow();
-
-                GlobalSymbols::getInstance().prettyPrint();
-                ControlFlow::getInstance().prettyPrint();
+                fprintf(stderr, "GlobalSymbols are correct!\n");
+                SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
+                sem_analysis->visitProgram(parse_tree);
+                delete sem_analysis;
             }
-            catch (const std::invalid_argument& e)
-            {
-                fprintf(stderr, "ERROR\n");
-                fprintf(stderr, "%s\n", e.what());
-                return 1;
-            }
+
+            ControlFlow::getInstance().checkFlow();
+        }
+        catch (const std::invalid_argument &e)
+        {
+            CompilerMsgs::getInstance().error(-1, e.what());
         }
 
-        return 0;
+        if (!CompilerMsgs::getInstance().printErrorMsgs())
+        {
+            CompilerMsgs::getInstance().printOk();
+            return 0;
+        }
     }
 
     return 1;

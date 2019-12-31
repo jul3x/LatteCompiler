@@ -78,11 +78,6 @@ public:
     }
 
     bool setTermination(const std::string &type) {
-        if (type != ret_types_.back())
-        {
-            return false;
-        }
-
         termination_.back().back() = true;
 
         for (const auto &loop : infinite_loops_)
@@ -90,6 +85,11 @@ public:
             termination_.back().at(loop) = true;
             while_block_ = loop < while_block_ ? loop : while_block_;
             while_block_term_ = true;
+        }
+
+        if (type != ret_types_.back())
+        {
+            return false;
         }
 
         return true;
@@ -128,9 +128,8 @@ public:
                     vertex.empty() && !termination_.at(i).at(j) &&
                     reachable_.at(i).at(j))
                 {
-                    std::string error = "Error line " +
-                            std::to_string(function_names_.at(i).second) +
-                            ": function \"" + function_names_.at(i).first + "\""
+                    std::string error = "Function \"" + function_names_.at(i).first + "\""
+                            " (line " + std::to_string(function_names_.at(i).second) + ")"
                             " does not have appropriate termination by return statement"
                             " in every path in control flow graph!\n";
                     throw std::invalid_argument(error);

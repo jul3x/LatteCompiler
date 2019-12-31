@@ -2,6 +2,7 @@
 #include "LocalSymbols.h"
 #include "GlobalSymbols.h"
 #include "ControlFlow.h"
+#include "CompilerMsgs.h"
 
 
 void SemAnalysisVisitor::visitProgram(Program *t)
@@ -34,12 +35,17 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
     LocalSymbols::getInstance().reset();
     LocalSymbols::getInstance().enterBlock();
 
-    ControlFlow::getInstance().newFunction(fn_def->ident_, fn_def->type_->get(),
-                                           fn_def->line_number_);
-
     fn_def->type_->accept(this);
 
-    GlobalSymbols::getInstance().checkType(fn_def->type_->get());
+    if (!GlobalSymbols::getInstance().checkType(fn_def->type_->get()))
+    {
+        CompilerMsgs::getInstance().error(fn_def->type_->line_number_,
+            fn_def->type_->get() + " is not a valid type name!");
+        return;
+    }
+
+    ControlFlow::getInstance().newFunction(fn_def->ident_, fn_def->type_->get(),
+                                           fn_def->line_number_);
 
     visitIdent(fn_def->ident_);
     fn_def->listarg_->accept(this);
@@ -90,20 +96,47 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
     ar->type_->accept(this);
     visitIdent(ar->ident_);
 
-    GlobalSymbols::getInstance().checkType(ar->type_->get());
+    if (!GlobalSymbols::getInstance().checkType(ar->type_->get()))
+    {
+        CompilerMsgs::getInstance().error(ar->type_->line_number_,
+            ar->type_->get() + " is not a valid type name!");
+        return;
+    }
 
     if (ar->type_->get().substr(0, 4) == "void")
     {
-        std::string error = "Cannot declare variable with void type!\n";
-        throw std::invalid_argument(error.c_str());
+        CompilerMsgs::getInstance().error(ar->type_->line_number_,
+            "Cannot declare variable with void type!");
+        return;
     }
 
-    LocalSymbols::getInstance().append(ar->ident_, ar->type_->get());
+    if (!LocalSymbols::getInstance().append(ar->ident_, ar->type_->get()))
+    {
+        std::string error = "Identifier " + ar->ident_ + " was already declared in this scope!";
+        CompilerMsgs::getInstance().error(ar->line_number_, error);
+        return;
+    }
 
     auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
-    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(ar->ident_);
-    GlobalSymbols::getInstance().appendLocals(function_name, ar->ident_,
-                                              ar->type_->get(), index_of_var);
+    int index_of_var;
+
+    try
+    {
+        index_of_var = LocalSymbols::getInstance().getSymbolIndex(ar->ident_);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        CompilerMsgs::getInstance().error(ar->line_number_, e.what());
+        return;
+    }
+
+    if (!GlobalSymbols::getInstance().appendLocals(function_name, ar->ident_,
+                                                   ar->type_->get(), index_of_var))
+    {
+        CompilerMsgs::getInstance().error(ar->line_number_,
+            "Identifier " + function_name + " does not exists as a function name!");
+        return;
+    }
 
     ar->index_of_var_ = index_of_var;
     ar->function_name_ = function_name;
@@ -134,7 +167,12 @@ void SemAnalysisVisitor::visitDecl(Decl *decl)
     /* Code For Decl Goes Here */
     decl->type_->accept(this);
 
-    GlobalSymbols::getInstance().checkType(decl->type_->get());
+    if (!GlobalSymbols::getInstance().checkType(decl->type_->get()))
+    {
+        CompilerMsgs::getInstance().error(decl->type_->line_number_,
+            decl->type_->get() + " is not a valid type name!");
+        return;
+    }
 
     decl->listitem_->type_ = decl->type_->get();
 
@@ -151,14 +189,16 @@ void SemAnalysisVisitor::visitAss(Ass *ass)
     if (ass->expr_1->type_ != ass->expr_2->type_)
     {
         std::string error = "Lvalue of type: " + ass->expr_1->type_ +
-            " does not match rvalue of type: " + ass->expr_2->type_ + "!\n";
-        throw std::invalid_argument(error.c_str());
+            " does not match rvalue of type: " + ass->expr_2->type_ + "!";
+        CompilerMsgs::getInstance().error(ass->expr_1->line_number_, error);
+        return;
     }
 
     if (!ass->expr_1->is_lvalue_)
     {
-        std::string error = "Assignment can be done only for appropriate lvalues!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Assignment can be done only for appropriate lvalues!";
+        CompilerMsgs::getInstance().error(ass->expr_1->line_number_, error);
+        return;
     }
 }
 
@@ -170,14 +210,16 @@ void SemAnalysisVisitor::visitIncr(Incr *incr)
 
     if (incr->expr_->type_ != "int")
     {
-        std::string error = "Only int variables can be incremented!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Only int variables can be incremented!";
+        CompilerMsgs::getInstance().error(incr->expr_->line_number_, error);
+        return;
     }
 
     if (!incr->expr_->is_lvalue_)
     {
-        std::string error = "Incrementing can be done only for appropriate lvalues!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Incrementing can be done only for appropriate lvalues!";
+        CompilerMsgs::getInstance().error(incr->expr_->line_number_, error);
+        return;
     }
 }
 
@@ -189,14 +231,16 @@ void SemAnalysisVisitor::visitDecr(Decr *decr)
 
     if (decr->expr_->type_ != "int")
     {
-        std::string error = "Only int variables can be decremented!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Only int variables can be decremented!";
+        CompilerMsgs::getInstance().error(decr->expr_->line_number_, error);
+        return;
     }
 
     if (!decr->expr_->is_lvalue_)
     {
-        std::string error = "Decrementing can be done only for appropriate lvalues!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Decrementing can be done only for appropriate lvalues!";
+        CompilerMsgs::getInstance().error(decr->expr_->line_number_, error);
+        return;
     }
 }
 
@@ -208,17 +252,18 @@ void SemAnalysisVisitor::visitRet(Ret *ret)
 
     if (ret->expr_->type_ == "void")
     {
-        throw std::invalid_argument("Return with value can be used only for non-void return types!\n");
+        CompilerMsgs::getInstance().error(ret->expr_->line_number_,
+            "Return with value can be used only for non-void return types!");
     }
 
     if (!ControlFlow::getInstance().setTermination(ret->expr_->type_))
     {
-        std::string error = "Error line " + std::to_string(ret->line_number_) +
-                ": return type " + ret->expr_->type_ +
+        std::string error = "Return type " + ret->expr_->type_ +
                 " does not match declared function \"" +
                 ControlFlow::getInstance().getCurrentFunctionName() + "\" return type: " +
-                ControlFlow::getInstance().getCurrentFunctionType() + "!\n";
-        throw std::invalid_argument(error);
+                ControlFlow::getInstance().getCurrentFunctionType() + "!";
+        CompilerMsgs::getInstance().error(ret->expr_->line_number_, error);
+        return;
     }
 }
 
@@ -228,12 +273,12 @@ void SemAnalysisVisitor::visitVRet(VRet *v_ret)
 
     if (!ControlFlow::getInstance().setTermination("void"))
     {
-        std::string error = "Error line " + std::to_string(v_ret->line_number_) +
-                ": return type void "
+        std::string error = "Return type void"
                 " does not match declared function \"" +
                 ControlFlow::getInstance().getCurrentFunctionName() + "\" return type: " +
-                ControlFlow::getInstance().getCurrentFunctionType() + "!\n";
-        throw std::invalid_argument(error);
+                ControlFlow::getInstance().getCurrentFunctionType() + "!";
+        CompilerMsgs::getInstance().error(v_ret->line_number_, error);
+        return;
     }
 }
 
@@ -245,8 +290,9 @@ void SemAnalysisVisitor::visitCond(Cond *cond)
 
     if (cond->expr_->type_ != "boolean")
     {
-        std::string error = "Condition in if statement must be of boolean type!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Condition in if statement must be of boolean type!";
+        CompilerMsgs::getInstance().error(cond->expr_->line_number_, error);
+        return;
     }
 
     if (!cond->expr_->is_always_false_ && !cond->expr_->is_always_true_)
@@ -287,8 +333,9 @@ void SemAnalysisVisitor::visitCondElse(CondElse *cond_else)
 
     if (cond_else->expr_->type_ != "boolean")
     {
-        std::string error = "Condition in if statement must be of boolean type!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Condition in if statement must be of boolean type!";
+        CompilerMsgs::getInstance().error(cond_else->expr_->line_number_, error);
+        return;
     }
 
     if (!cond_else->expr_->is_always_false_ && !cond_else->expr_->is_always_true_)
@@ -338,8 +385,9 @@ void SemAnalysisVisitor::visitWhile(While *while_)
 
     if (while_->expr_->type_ != "boolean")
     {
-        std::string error = "Condition in while statement must be of boolean type!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Condition in while statement must be of boolean type!";
+        CompilerMsgs::getInstance().error(while_->expr_->line_number_, error);
+        return;
     }
 
     // infinite loop
@@ -366,19 +414,26 @@ void SemAnalysisVisitor::visitFor(For *for_)
 
     if (for_->type_->get().substr(0, 4) == "void")
     {
-        std::string error = "Cannot declare variable with void type!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Cannot declare variable with void type!";
+        CompilerMsgs::getInstance().error(for_->type_->line_number_, error);
+        return;
     }
 
-    LocalSymbols::getInstance().append(for_->ident_, for_->type_->get());
+    if (!LocalSymbols::getInstance().append(for_->ident_, for_->type_->get()))
+    {
+        std::string error = "Identifier " + for_->ident_ + " was already declared in this scope!";
+        CompilerMsgs::getInstance().error(for_->type_->line_number_, error);
+        return;
+    }
 
     for_->expr_->accept(this);
 
     if (for_->type_->get() + "[]" != for_->expr_->type_)
     {
         std::string error = "Type of iterator: " + for_->type_->get() +
-            " of for loop does not match type of array: " + for_->expr_->type_ + "\n";
-        throw std::invalid_argument(error.c_str());
+            " of for loop does not match type of array: " + for_->expr_->type_ + "!";
+        CompilerMsgs::getInstance().error(for_->type_->line_number_, error);
+        return;
     }
 
     for_->stmt_->accept(this);
@@ -398,16 +453,38 @@ void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
     /* Code For NoInit Goes Here */
     if (no_init->type_.substr(0, 4) == "void")
     {
-        std::string error = "Cannot declare variable with void type!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Cannot declare variable with void type!";
+        CompilerMsgs::getInstance().error(no_init->line_number_, error);
+        return;
     }
 
-    LocalSymbols::getInstance().append(no_init->ident_, no_init->type_);
+    if (!LocalSymbols::getInstance().append(no_init->ident_, no_init->type_))
+    {
+        std::string error = "Identifier " + no_init->ident_ + " was already declared in this scope!";
+        CompilerMsgs::getInstance().error(no_init->line_number_, error);
+        return;
+    }
 
     auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
-    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(no_init->ident_);
-    GlobalSymbols::getInstance().appendLocals(function_name, no_init->ident_,
-                                              no_init->type_, index_of_var);
+    int index_of_var;
+
+    try
+    {
+        index_of_var = LocalSymbols::getInstance().getSymbolIndex(no_init->ident_);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        CompilerMsgs::getInstance().error(no_init->line_number_, e.what());
+        return;
+    }
+
+    if (!GlobalSymbols::getInstance().appendLocals(function_name, no_init->ident_,
+                                                   no_init->type_, index_of_var))
+    {
+        CompilerMsgs::getInstance().error(no_init->line_number_,
+            "Identifier " + function_name + " does not exists as a function name!");
+        return;
+    }
 }
 
 void SemAnalysisVisitor::visitInit(Init *init)
@@ -417,24 +494,47 @@ void SemAnalysisVisitor::visitInit(Init *init)
 
     if (init->type_.substr(0, 4) == "void")
     {
-        std::string error = "Cannot declare variable with void type!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Cannot declare variable with void type!";
+        CompilerMsgs::getInstance().error(init->line_number_, error);
+        return;
     }
 
     if (init->expr_->type_ != init->type_)
     {
         std::string error = "Type of value: " + init->expr_->type_ +
             " does not match type: " + init->type_ +
-            " of declared variable of name " + init->ident_ + "!\n";
-        throw std::invalid_argument(error.c_str());
+            " of declared variable of name " + init->ident_ + "!";
+        CompilerMsgs::getInstance().error(init->expr_->line_number_, error);
+        return;
     }
 
-    LocalSymbols::getInstance().append(init->ident_, init->type_);
+    if (!LocalSymbols::getInstance().append(init->ident_, init->type_))
+    {
+        std::string error = "Identifier " + init->ident_ + " was already declared in this scope!";
+        CompilerMsgs::getInstance().error(init->line_number_, error);
+        return;
+    }
 
     auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
-    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(init->ident_);
-    GlobalSymbols::getInstance().appendLocals(function_name, init->ident_,
-                                              init->type_, index_of_var);
+    int index_of_var;
+
+    try
+    {
+        index_of_var = LocalSymbols::getInstance().getSymbolIndex(init->ident_);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        CompilerMsgs::getInstance().error(init->line_number_, e.what());
+        return;
+    }
+
+    if (!GlobalSymbols::getInstance().appendLocals(function_name, init->ident_,
+                                                   init->type_, index_of_var))
+    {
+        CompilerMsgs::getInstance().error(init->line_number_,
+            "Identifier " + function_name + " does not exists as a function name!");
+        return;
+    }
 
     init->index_of_var_ = index_of_var;
     init->function_name_ = function_name;
@@ -499,7 +599,15 @@ void SemAnalysisVisitor::visitFun(Fun *fun)
 void SemAnalysisVisitor::visitEVar(EVar *e_var)
 {
     /* Code For EVar Goes Here */
-    e_var->type_ = LocalSymbols::getInstance().getSymbolType(e_var->ident_);
+    try
+    {
+        e_var->type_ = LocalSymbols::getInstance().getSymbolType(e_var->ident_);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        CompilerMsgs::getInstance().error(e_var->line_number_, e.what());
+        return;
+    }
 
     visitIdent(e_var->ident_);
     e_var->is_lvalue_ = true;
@@ -508,7 +616,17 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
     e_var->has_value_ = false;
 
     auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
-    auto index_of_var = LocalSymbols::getInstance().getSymbolIndex(e_var->ident_);
+    int index_of_var;
+
+    try
+    {
+        index_of_var = LocalSymbols::getInstance().getSymbolIndex(e_var->ident_);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        CompilerMsgs::getInstance().error(e_var->line_number_, e.what());
+        return;
+    }
 
     e_var->index_of_var_ = index_of_var;
     e_var->function_name_ = function_name;
@@ -529,22 +647,26 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
     e_arr_var->expr_1->accept(this);
     e_arr_var->expr_2->accept(this);
 
+    std::string error;
     if (e_arr_var->expr_1->type_.substr(e_arr_var->expr_1->type_.length() - 2) != "[]")
     {
-        std::string error = "[] operation can be performed only for array types!\n";
-        throw std::invalid_argument(error.c_str());
+        error = "[] operation can be performed only for array types!";
     }
 
     if (!e_arr_var->expr_1->is_lvalue_)
     {
-        std::string error = "[] operation can be performed only on lvalue array types!\n";
-        throw std::invalid_argument(error.c_str());
+        error = "[] operation can be performed only on lvalue array types!";
     }
 
     if (e_arr_var->expr_2->type_ != "int")
     {
-        std::string error = "[] operation can be performed only using int parameter!\n";
-        throw std::invalid_argument(error.c_str());
+        error = "[] operation can be performed only using int parameter!";
+    }
+
+    if (!error.empty())
+    {
+        CompilerMsgs::getInstance().error(e_arr_var->expr_1->line_number_, error);
+        return;
     }
 
     e_arr_var->type_ = e_arr_var->expr_1->type_.substr(0, e_arr_var->expr_1->type_.length() - 2);
@@ -615,7 +737,17 @@ void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
 {
     /* Code For EApp Goes Here */
-    e_app->type_ = GlobalSymbols::getInstance().getFunctionType(e_app->ident_);
+    try
+    {
+        e_app->type_ = GlobalSymbols::getInstance().getFunctionType(e_app->ident_);
+    }
+    catch (const std::invalid_argument& e)
+    {
+        CompilerMsgs::getInstance().error(e_app->line_number_,
+            e_app->ident_ + " function does not exist!");
+
+        return;
+    }
 
     visitIdent(e_app->ident_);
     e_app->listexpr_->accept(this);
@@ -625,18 +757,22 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
     if (e_app->listexpr_->size() != args->size())
     {
         std::string error = e_app->ident_ + " function requires " + std::to_string(args->size()) +
-            " arguments, provided: " + std::to_string(e_app->listexpr_->size()) + "!\n";
-        throw std::invalid_argument(error.c_str());
+            " arguments, provided: " + std::to_string(e_app->listexpr_->size()) + "!";
+        CompilerMsgs::getInstance().error(e_app->listexpr_->line_number_, error);
+
+        return;
     }
 
     for (int i = 0; i < args->size(); ++ i)
     {
         if (e_app->listexpr_->at(i)->type_ != args->at(i)->getType())
         {
-        std::string error = e_app->ident_ + " function's " + std::to_string(i + 1) + 
-            " argument needs to be of type: " + args->at(i)->getType() +
-            ", provided: " + e_app->listexpr_->at(i)->type_ + "!\n";
-        throw std::invalid_argument(error.c_str());
+            std::string error = e_app->ident_ + " function's " + std::to_string(i + 1) + 
+                " argument needs to be of type: " + args->at(i)->getType() +
+                ", provided: " + e_app->listexpr_->at(i)->type_ + "!";
+            CompilerMsgs::getInstance().error(e_app->listexpr_->at(i)->line_number_, error);
+
+            return;
         }
     }
 
@@ -665,8 +801,9 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
 
     if (e_neg->expr_->type_ != "int")
     {
-        std::string error = "Negation operation can be performed only using int parameter!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Negation operation can be performed only using int parameter!";
+        CompilerMsgs::getInstance().error(e_neg->expr_->line_number_, error);
+        return;
     }
 
     e_neg->is_lvalue_ = false;
@@ -685,8 +822,9 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
 
     if (e_not->expr_->type_ != "boolean")
     {
-        std::string error = "Not operation can be performed only using boolean parameter!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Not operation can be performed only using boolean parameter!";
+        CompilerMsgs::getInstance().error(e_not->expr_->line_number_, error);
+        return;
     }
 
     e_not->is_lvalue_ = false;
@@ -747,8 +885,9 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
 
     if (ea_std_new->expr_->type_ != "int")
     {
-        std::string error = "New operation for arrays can be performed only using int parameter!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "New operation for arrays can be performed only using int parameter!";
+        CompilerMsgs::getInstance().error(ea_std_new->expr_->line_number_, error);
+        return;
     }
 
     ea_std_new->type_ = ea_std_new->stdtype_->get() + "[]";
@@ -802,8 +941,9 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     if (e_mul->expr_1->type_ != "int" ||
         e_mul->expr_2->type_ != "int")
     {
-        std::string error = "Multiplication operation can be performed only using two int parameters!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Multiplication operation can be performed only using two int parameters!";
+        CompilerMsgs::getInstance().error(e_mul->expr_1->line_number_, error);
+        return;
     }
 
     e_mul->type_ = "int";
@@ -824,7 +964,8 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     {
         if (e_mul->expr_2->value_ == 0)
         {
-            throw std::invalid_argument("Numbers cannot be divided by 0!\n");
+            CompilerMsgs::getInstance().error(e_mul->expr_2->line_number_, "Numbers cannot be divided by 0!");
+            return;
         }
 
         e_mul->value_ = e_mul->expr_1->value_ / e_mul->expr_2->value_;
@@ -858,13 +999,15 @@ void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
     {
         if (is_plus != nullptr)
         {
-            std::string error = "Add operation can be performed only using two int or two string parameters!\n";
-            throw std::invalid_argument(error.c_str());
+            std::string error = "Add operation can be performed only using two int or two string parameters!";
+            CompilerMsgs::getInstance().error(e_add->expr_1->line_number_, error);
+            return;
         }
         else
         {
-            std::string error = "Substracting operation can be performed only using two int parameters!\n";
-            throw std::invalid_argument(error.c_str());
+            std::string error = "Substracting operation can be performed only using two int parameters!";
+            CompilerMsgs::getInstance().error(e_add->expr_1->line_number_, error);
+            return;
         }
     }
 
@@ -979,11 +1122,13 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
 
         if (!is_ok)
         {
-            std::string error = "Relation operation can be performed only using two int or two boolean parameters!\n";
-            throw std::invalid_argument(error.c_str());
+            std::string error = "Relation operation can be performed only using"
+                                " two int or two boolean parameters!";
+            CompilerMsgs::getInstance().error(e_rel->expr_1->line_number_, error);
+            return;
         }
     }
-    else if (e_rel->expr_1->type_ == "int" ||
+    else if (e_rel->expr_1->type_ == "int" &&
              e_rel->expr_2->type_ == "int")
     {
         is_ok = true;
@@ -1045,10 +1190,12 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
         }
     }
 
-    if (!is_ok)
+    if (!is_ok && is_eq == nullptr && is_neq == nullptr)
     {
-        std::string error = "Relation operation can be performed only using two int parameters!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Relation operation can be performed only"
+                            " using two int parameters!";
+        CompilerMsgs::getInstance().error(e_rel->expr_1->line_number_, error);
+        return;
     }
 
     e_rel->type_ = "boolean";
@@ -1068,8 +1215,9 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
     if (e_and->expr_1->type_ != "boolean" ||
         e_and->expr_2->type_ != "boolean")
     {
-        std::string error = "And operation can be performed only using two boolean parameters!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "And operation can be performed only using two boolean parameters!";
+        CompilerMsgs::getInstance().error(e_and->expr_1->line_number_, error);
+        return;
     }
 
     e_and->type_ = "boolean";
@@ -1104,8 +1252,9 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
     if (e_or->expr_1->type_ != "boolean" ||
         e_or->expr_2->type_ != "boolean")
     {
-        std::string error = "Or operation can be performed only using two boolean parameters!\n";
-        throw std::invalid_argument(error.c_str());
+        std::string error = "Or operation can be performed only using two boolean parameters!";
+        CompilerMsgs::getInstance().error(e_or->expr_1->line_number_, error);
+        return;
     }
 
     e_or->type_ = "boolean";
