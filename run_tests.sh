@@ -16,6 +16,7 @@ function check()
         ./latc_x86 $f >> /dev/null
         if [[ $? -ne $2 ]] ; then
             echo -e "\e[92mOK!\e[0m"
+	    rm "${f%.*}"
         else
             ERROR=1
             echo -e "\033[31mERROR!\e[0m"

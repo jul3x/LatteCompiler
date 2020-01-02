@@ -28,6 +28,10 @@ void CodeGenVisitor::visitProg(Prog *prog)
 
 void CodeGenVisitor::visitFnDef(FnDef *fn_def)
 {
+    CompilerOutput::getInstance().printOutput(fn_def->ident_ + ":\n"
+                                              "  pushl %ebp\n"
+                                              "  movl %esp, %ebp\n");
+
     fn_def->type_->accept(this);
     visitIdent(fn_def->ident_);
     fn_def->listarg_->accept(this);
@@ -114,10 +118,21 @@ void CodeGenVisitor::visitDecr(Decr *decr)
 void CodeGenVisitor::visitRet(Ret *ret)
 {
     ret->expr_->accept(this);
+
+    // TODO - JUST FOR NOW
+    CompilerOutput::getInstance().printOutput("  pushl $2\n");
+
+    CompilerOutput::getInstance().printOutput("  popl %eax\n");
+    CompilerOutput::getInstance().printOutput("  movl %ebp, %esp\n"
+                                              "  popl %ebp\n"
+                                              "  ret\n\n");
 }
 
 void CodeGenVisitor::visitVRet(VRet *v_ret)
 {
+    CompilerOutput::getInstance().printOutput("  movl %ebp, %esp\n"
+                                              "  popl %ebp\n"
+                                              "  ret\n\n");
 }
 
 void CodeGenVisitor::visitCond(Cond *cond)

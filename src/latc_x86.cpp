@@ -60,8 +60,8 @@ int main(int argc, char **argv)
     else
         input = stdin;
 
-    std::string directory, class_name, out_file;
-    std::tie(directory, class_name, out_file) = generateOutNames(argv[1], "s");
+    std::string directory, program_name, out_file;
+    std::tie(directory, program_name, out_file) = generateOutNames(argv[1], "s");
 
     Program *parse_tree;
 
@@ -110,13 +110,29 @@ int main(int argc, char **argv)
             CompilerOutput::getInstance().printOutput(".text\n\n");
 
             for (const auto &fun : GlobalSymbols::getInstance().getFunctions())
-                CompilerOutput::getInstance().printOutput("globl " + fun.first + "\n");
+                CompilerOutput::getInstance().printOutput(".globl " + fun.first + "\n");
 
             CodeGenVisitor *code_gen = new CodeGenVisitor();
             code_gen->visitProgram(parse_tree);
             delete code_gen;
 
             CompilerOutput::getInstance().deinitializeOutputFile();
+
+            std::string exec_param = argv[0];
+            auto last_slash_iter = exec_param.find_last_of('/');
+            std::string relative_directory_exec =
+                last_slash_iter == std::string::npos ? exec_param : exec_param.substr(0, last_slash_iter);
+            std::string asm_command =
+                "gcc -c -o " + directory + "/" + program_name + ".o -m32 " + directory + "/" + program_name + ".s";
+            std::string linker_command =
+                "gcc -o " + directory + "/" + program_name + " -m32 "
+                + directory + "/" + program_name + ".o";
+
+            std::system(asm_command.c_str());
+            std::system(linker_command.c_str());
+
+            printf("Generated: %s/%s\n",
+                directory.c_str(), program_name.c_str());
 
             CompilerOutput::getInstance().printOk();
 
