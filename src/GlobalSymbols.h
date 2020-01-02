@@ -132,6 +132,9 @@ public:
         }
     }
 
+    const std::unordered_map<std::string, FunctionType>& getFunctions() const {
+        return functions_;
+    }
 
 private:
     GlobalSymbols() {

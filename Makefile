@@ -7,7 +7,7 @@ FLEX_OPTS=-PLatte
 BISON=bison
 BISON_OPTS=-t -pLatte
 
-OBJS=Absyn.o Lexer.o Parser.o Printer.o SemAnalysisVisitor.o GlobalSymbolsCollector.o 
+OBJS=Absyn.o Lexer.o Parser.o Printer.o SemAnalysisVisitor.o GlobalSymbolsCollector.o CodeGenVisitor.o
 
 .PHONY: clean distclean
 
@@ -31,7 +31,7 @@ src/Parser.cpp: src/Latte.y
 	${BISON} src/Latte.y -o src/Parser.cpp
 
 Lexer.o: src/Lexer.cpp src/Parser.h
-	${CC} ${CCFLAGS} -c src/Lexer.cpp 
+	${CC} ${CCFLAGS} -c src/Lexer.cpp
 
 Parser.o: src/Parser.cpp src/Absyn.h
 	${CC} ${CCFLAGS} -c src/Parser.cpp
@@ -42,8 +42,11 @@ Printer.o: src/Printer.cpp src/Printer.h src/Absyn.h
 SemAnalysisVisitor.o: src/SemAnalysisVisitor.cpp src/SemAnalysisVisitor.h src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/SemAnalysisVisitor.cpp
 
+CodeGenVisitor.o: src/CodeGenVisitor.cpp src/CodeGenVisitor.h src/Absyn.h
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/CodeGenVisitor.cpp
+
 GlobalSymbolsCollector.o: src/GlobalSymbolsCollector.cpp src/GlobalSymbolsCollector.h src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/GlobalSymbolsCollector.cpp
 
-latc_x86.o: src/latc_x86.cpp src/Parser.h src/Printer.h src/Absyn.h src/SemAnalysisVisitor.h
+latc_x86.o: src/latc_x86.cpp src/Parser.h src/Printer.h src/Absyn.h src/SemAnalysisVisitor.h src/CodeGenVisitor.h
 	${CC} ${CCFLAGS} -c src/latc_x86.cpp

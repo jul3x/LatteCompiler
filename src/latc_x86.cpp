@@ -5,10 +5,12 @@
 #include "Printer.h"
 #include "Absyn.h"
 #include "SemAnalysisVisitor.h"
+#include "CodeGenVisitor.h"
 #include "GlobalSymbolsCollector.h"
 #include "GlobalSymbols.h"
 #include "ControlFlow.h"
-#include "CompilerMsgs.h"
+#include "CompilerOutput.h"
+#include "Utils.h"
 
 
 void usage()
@@ -58,6 +60,9 @@ int main(int argc, char **argv)
     else
         input = stdin;
 
+    std::string directory, class_name, out_file;
+    std::tie(directory, class_name, out_file) = generateOutNames(argv[1], "s");
+
     Program *parse_tree;
 
     try
@@ -66,11 +71,11 @@ int main(int argc, char **argv)
     }
     catch (std::out_of_range &e)
     {
-        CompilerMsgs::getInstance().error(std::stoi(e.what()),
+        CompilerOutput::getInstance().error(std::stoi(e.what()),
               "Integer value should be greater or equal"
               " -2147483648 and less or equal 2147483647!");
 
-        CompilerMsgs::getInstance().printErrorMsgs();
+        CompilerOutput::getInstance().printErrorMsgs();
         return 1;
     }
 
@@ -85,7 +90,6 @@ int main(int argc, char **argv)
         {
             if (GlobalSymbols::getInstance().areCorrect())
             {
-                fprintf(stderr, "GlobalSymbols are correct!\n");
                 SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
                 sem_analysis->visitProgram(parse_tree);
                 delete sem_analysis;
@@ -95,12 +99,27 @@ int main(int argc, char **argv)
         }
         catch (const std::invalid_argument &e)
         {
-            CompilerMsgs::getInstance().error(-1, e.what());
+            CompilerOutput::getInstance().error(-1, e.what());
         }
 
-        if (!CompilerMsgs::getInstance().printErrorMsgs())
+        if (!CompilerOutput::getInstance().printErrorMsgs())
         {
-            CompilerMsgs::getInstance().printOk();
+            CompilerOutput::getInstance().initializeOutputFile(out_file);
+
+            CompilerOutput::getInstance().printOutput(".data\n\n");
+            CompilerOutput::getInstance().printOutput(".text\n\n");
+
+            for (const auto &fun : GlobalSymbols::getInstance().getFunctions())
+                CompilerOutput::getInstance().printOutput("globl " + fun.first + "\n");
+
+            CodeGenVisitor *code_gen = new CodeGenVisitor();
+            code_gen->visitProgram(parse_tree);
+            delete code_gen;
+
+            CompilerOutput::getInstance().deinitializeOutputFile();
+
+            CompilerOutput::getInstance().printOk();
+
             return 0;
         }
     }

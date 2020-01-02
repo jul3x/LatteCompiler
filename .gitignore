@@ -31,3 +31,6 @@
 
 # Executables
 latc_x86
+
+# Tests output
+*.s
