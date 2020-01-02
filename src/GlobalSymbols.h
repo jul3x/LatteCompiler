@@ -3,8 +3,10 @@
 
 #include <unordered_map>
 #include <set>
+#include <algorithm>
 #include <tuple>
 #include <string>
+#include <iostream>
 
 #include "Absyn.h"
 
@@ -30,7 +32,22 @@ public:
         delete int_type;
     }
 
+    bool isLibFunction(const std::string &name) {
+        if (lib_functions_.find(name) != lib_functions_.end())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     void addLibFunctions() {
+        lib_functions_.insert("printInt");
+        lib_functions_.insert("printString");
+        lib_functions_.insert("error");
+        lib_functions_.insert("readInt");
+        lib_functions_.insert("readString");
+
         appendFunc("printInt", void_type, int_args);
         appendFunc("printString", void_type, string_args);
         appendFunc("error", void_type, empty_args);
@@ -74,6 +91,20 @@ public:
         }
 
         return false;
+    }
+
+    void appendString(const std::string &str) {
+        std::string label = "loc_str_val_" + std::to_string(strings_.size());
+
+        strings_.insert(std::make_pair(str, label));
+    }
+
+    const std::string& getStringLabel(const std::string &str) {
+        return strings_.find(str)->second;
+    }
+
+    const std::unordered_map<std::string, std::string> getStrings() const {
+        return strings_;
     }
 
     bool areCorrect() const {
@@ -261,6 +292,9 @@ private:
 
     std::unordered_map<std::string, FunctionType> functions_;
     std::unordered_map<std::string, ClassParent> classes_;
+
+    std::unordered_map<std::string, std::string> strings_;
+    std::set<std::string> lib_functions_;
 
     Type *void_type;
     Type *string_type;

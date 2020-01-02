@@ -107,10 +107,21 @@ int main(int argc, char **argv)
             CompilerOutput::getInstance().initializeOutputFile(out_file);
 
             CompilerOutput::getInstance().printOutput(".data\n\n");
+
+            for (const auto &str : GlobalSymbols::getInstance().getStrings())
+            {
+                CompilerOutput::getInstance().printOutput(str.second + ": .string \"");
+                CompilerOutput::getInstance().printOutput(str.first, true);
+                CompilerOutput::getInstance().printOutput("\"\n");
+            }
+
             CompilerOutput::getInstance().printOutput(".text\n\n");
 
             for (const auto &fun : GlobalSymbols::getInstance().getFunctions())
-                CompilerOutput::getInstance().printOutput(".globl " + fun.first + "\n");
+            {
+                if (!GlobalSymbols::getInstance().isLibFunction(fun.first))
+                    CompilerOutput::getInstance().printOutput(".globl " + fun.first + "\n");
+            }
 
             CodeGenVisitor *code_gen = new CodeGenVisitor();
             code_gen->visitProgram(parse_tree);
@@ -126,7 +137,7 @@ int main(int argc, char **argv)
                 "gcc -c -o " + directory + "/" + program_name + ".o -m32 " + directory + "/" + program_name + ".s";
             std::string linker_command =
                 "gcc -o " + directory + "/" + program_name + " -m32 "
-                + directory + "/" + program_name + ".o";
+                + directory + "/" + program_name + ".o " + relative_directory_exec + "/lib/runtime.o";
 
             std::system(asm_command.c_str());
             std::system(linker_command.c_str());

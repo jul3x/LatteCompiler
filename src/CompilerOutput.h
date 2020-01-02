@@ -35,8 +35,22 @@ public:
         output_.clear();
     }
 
-    void printOutput(const std::string &what) {
-        out_file_ << what;
+    void printOutput(const std::string &what, bool format = false) {
+        if (!format)
+            out_file_ << what;
+        else
+        {
+            const char *s = what.c_str();
+            char formatted[10];
+            while (*s) {
+                if (isalnum((unsigned char) *s))
+                    sprintf(formatted, "%c", *s);
+                else
+                    sprintf(formatted, "\\%03hho", *s);
+                out_file_ << formatted;
+                s++;
+            }
+        }
     }
 
     void destroyOutputFile() {

@@ -123,15 +123,13 @@ void CodeGenVisitor::visitRet(Ret *ret)
     CompilerOutput::getInstance().printOutput("  pushl $2\n");
 
     CompilerOutput::getInstance().printOutput("  popl %eax\n");
-    CompilerOutput::getInstance().printOutput("  movl %ebp, %esp\n"
-                                              "  popl %ebp\n"
+    CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n\n");
 }
 
 void CodeGenVisitor::visitVRet(VRet *v_ret)
 {
-    CompilerOutput::getInstance().printOutput("  movl %ebp, %esp\n"
-                                              "  popl %ebp\n"
+    CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n\n");
 }
 
@@ -193,6 +191,7 @@ void CodeGenVisitor::visitFor(For *for_)
 void CodeGenVisitor::visitSExp(SExp *s_exp)
 {
     s_exp->expr_->accept(this);
+    CompilerOutput::getInstance().printOutput("  popl %eax\n");
 }
 
 void CodeGenVisitor::visitNoInit(NoInit *no_init)
@@ -268,11 +267,15 @@ void CodeGenVisitor::visitEArrVar(EArrVar *e_arr_var)
 void CodeGenVisitor::visitELitInt(ELitInt *e_lit_int)
 {
     visitInteger(e_lit_int->integer_);
+    CompilerOutput::getInstance().printOutput("  pushl $" +
+            std::to_string(e_lit_int->integer_) + "\n");
 }
 
 void CodeGenVisitor::visitEString(EString *e_string)
 {
     visitString(e_string->string_);
+    CompilerOutput::getInstance().printOutput("  pushl $" +
+            GlobalSymbols::getInstance().getStringLabel(e_string->string_) + "\n");
 }
 
 void CodeGenVisitor::visitELitTrue(ELitTrue *e_lit_true)
@@ -291,6 +294,33 @@ void CodeGenVisitor::visitEApp(EApp *e_app)
 {
     visitIdent(e_app->ident_);
     e_app->listexpr_->accept(this);
+
+    for (auto it = e_app->listexpr_->rbegin(); it != e_app->listexpr_->rend(); ++it)
+    {
+        if ((*it)->has_value_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $" +
+                    std::to_string((*it)->value_) + "\n");
+        }
+        else if ((*it)->is_always_false_)
+        {
+            CompilerOutput::getInstance().printOutput("  push $0\n");
+        }
+        else if ((*it)->is_always_true_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $1\n");
+        }
+        else
+        {
+            (*it)->accept(this);
+        }
+    }
+
+    CompilerOutput::getInstance().printOutput("  call " + e_app->ident_ + "\n");
+
+    CompilerOutput::getInstance().printOutput("  add $" +
+            std::to_string(4 * e_app->listexpr_->size()) + ", %esp\n");
+    CompilerOutput::getInstance().printOutput("  pushl %eax\n");
 }
 
 void CodeGenVisitor::visitEClsApp(EClsApp *e_cls_app)

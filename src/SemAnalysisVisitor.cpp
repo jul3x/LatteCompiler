@@ -810,7 +810,7 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
     e_neg->is_always_false_ = false;
     e_neg->is_always_true_ = false;
     e_neg->has_value_ = e_neg->expr_->has_value_;
-    e_neg->value_ = e_neg->expr_->value_;
+    e_neg->value_ = -e_neg->expr_->value_;
 }
 
 void SemAnalysisVisitor::visitENot(ENot *e_not)
@@ -1421,7 +1421,7 @@ void SemAnalysisVisitor::visitDouble(Double x)
 
 void SemAnalysisVisitor::visitString(String x)
 {
-    /* Code for String Goes Here */
+    GlobalSymbols::getInstance().appendString(x);
 }
 
 void SemAnalysisVisitor::visitIdent(Ident x)
