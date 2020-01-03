@@ -31,7 +31,8 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
 {
     CompilerOutput::getInstance().printOutput(fn_def->ident_ + ":\n"
                                               "  pushl \%ebp\n"
-                                              "  movl \%esp, \%ebp\n");
+                                              "  movl \%esp, \%ebp\n"
+                                              "  pushl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  sub $" + std::to_string(
         FunctionFrame::getInstance().getNumberOfBytesAlloc(fn_def->ident_)) +
         ", \%esp\n");
@@ -143,12 +144,14 @@ void CodeGenVisitor::visitRet(Ret *ret)
     ret->expr_->accept(this);
 
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n\n");
 }
 
 void CodeGenVisitor::visitVRet(VRet *v_ret)
 {
+    CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n\n");
 }
@@ -387,17 +390,13 @@ void CodeGenVisitor::visitEClsApp(EClsApp *e_cls_app)
 void CodeGenVisitor::visitENeg(ENeg *e_neg)
 {
     e_neg->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n"
-                                              "  neg \%eax\n"
-                                              "  pushl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  negl (\%esp)\n");
 }
 
 void CodeGenVisitor::visitENot(ENot *e_not)
 {
     e_not->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n"
-                                              "  not \%eax\n"
-                                              "  pushl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  notl (\%esp)\n");
 }
 
 void CodeGenVisitor::visitEVarNew(EVarNew *e_var_new)
@@ -497,17 +496,24 @@ void CodeGenVisitor::visitEAdd(EAdd *e_add)
 
     auto is_plus = dynamic_cast<Plus*>(e_add->addop_);
 
-    CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-
     if (e_add->expr_1->type_ == "string" &&
         e_add->expr_2->type_ == "string")
     {
-        return;
+
+        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  pushl \%ecx\n");
+        CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  call __Latte._helper_function._addStrings\n");
+        CompilerOutput::getInstance().printOutput("  add $8, \%esp\n");
+        CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+
     }
     else if (e_add->expr_1->type_ == "int" &&
              e_add->expr_2->type_ == "int")
     {
+        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         if (is_plus != nullptr)
         {
             CompilerOutput::getInstance().printOutput("  add \%ecx, \%eax\n");

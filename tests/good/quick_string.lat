@@ -1,0 +1,6 @@
+int main() {
+    string x = "COS\n";
+
+    printString(x);
+    return 0;
+}

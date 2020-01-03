@@ -9,6 +9,7 @@ scanf_int: .string "%d"
 .globl error
 .globl readInt
 .globl readString
+.globl __Latte._helper_function._addStrings
 
 printString:
   pushl %ebp
@@ -108,4 +109,45 @@ readInt:
 .L7:
 	movl	-4(%ebp), %ebx
 	leave
+	ret
+
+__Latte._helper_function._addStrings:
+	pushl	%ebp
+	movl	%esp, %ebp
+	pushl	%esi
+	pushl	%ebx
+	subl	$16, %esp
+	call	__x86.get_pc_thunk.bx
+	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
+	subl	$12, %esp
+	pushl	8(%ebp)
+	call	strlen@PLT
+	addl	$16, %esp
+	movl	%eax, %esi
+	subl	$12, %esp
+	pushl	12(%ebp)
+	call	strlen@PLT
+	addl	$16, %esp
+	addl	%esi, %eax
+	addl	$1, %eax
+	subl	$12, %esp
+	pushl	%eax
+	call	malloc@PLT
+	addl	$16, %esp
+	movl	%eax, -12(%ebp)
+	subl	$8, %esp
+	pushl	8(%ebp)
+	pushl	-12(%ebp)
+	call	strcpy@PLT
+	addl	$16, %esp
+	subl	$8, %esp
+	pushl	12(%ebp)
+	pushl	-12(%ebp)
+	call	strcat@PLT
+	addl	$16, %esp
+	movl	-12(%ebp), %eax
+	leal	-8(%ebp), %esp
+	popl	%ebx
+	popl	%esi
+	popl	%ebp
 	ret
