@@ -785,6 +785,11 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
     e_app->is_always_true_ = false;
     e_app->has_value_ = false;
 
+    if (e_app->ident_ == "error")
+    {
+        ControlFlow::getInstance().setTermination(ControlFlow::getInstance().getCurrentFunctionType());
+    }
+
 }
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
