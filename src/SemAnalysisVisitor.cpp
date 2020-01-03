@@ -130,8 +130,8 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
         return;
     }
 
-    if (!GlobalSymbols::getInstance().appendLocals(function_name, ar->ident_,
-                                                   ar->type_->get(), index_of_var))
+    if (!GlobalSymbols::getInstance().appendParameters(function_name, ar->ident_,
+                                                       ar->type_->get(), index_of_var))
     {
         CompilerOutput::getInstance().error(ar->line_number_,
             "Identifier " + function_name + " does not exists as a function name!");

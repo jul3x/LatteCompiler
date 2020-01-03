@@ -14,7 +14,7 @@ class GlobalSymbols
 {
 
 public:
-    using Locals = std::set<std::tuple<std::string, std::string, int>>;
+    using Locals = std::vector<std::tuple<std::string, std::string, int, bool>>;
     using FunctionType = std::tuple<Type*, ListArg*, Locals>;
     using ClassParent = std::string;
 
@@ -80,17 +80,41 @@ public:
         return false;
     }
 
+    bool appendParameters(const std::string &fn_ident, const std::string &loc_ident,
+                          const std::string &type, int index) {
+        auto function = functions_.find(fn_ident);
+
+        if (function != functions_.end())
+        {
+            std::get<2>(function->second).push_back({loc_ident, type, index, true});
+            return true;
+        }
+
+        return false;
+    }
+
     bool appendLocals(const std::string &fn_ident, const std::string &loc_ident,
                       const std::string &type, int index) {
         auto function = functions_.find(fn_ident);
 
         if (function != functions_.end())
         {
-            std::get<2>(function->second).insert({loc_ident, type, index});
+            std::get<2>(function->second).push_back({loc_ident, type, index, false});
             return true;
         }
 
         return false;
+    }
+
+    const Locals& getFunctionLocals(const std::string &fn_ident) {
+        auto function = functions_.find(fn_ident);
+
+        if (function != functions_.end())
+        {
+            return std::get<2>(function->second);
+        }
+
+        throw std::invalid_argument("Function " + fn_ident + " not found!");
     }
 
     void appendString(const std::string &str) {

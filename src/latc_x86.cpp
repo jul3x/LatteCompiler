@@ -10,6 +10,7 @@
 #include "GlobalSymbols.h"
 #include "ControlFlow.h"
 #include "CompilerOutput.h"
+#include "FunctionFrame.h"
 #include "Utils.h"
 
 
@@ -104,6 +105,9 @@ int main(int argc, char **argv)
 
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
+            FunctionFrame::getInstance().generatePointers();
+            //FunctionFrame::getInstance().printPointers();
+
             CompilerOutput::getInstance().initializeOutputFile(out_file);
 
             CompilerOutput::getInstance().printOutput(".data\n\n");
