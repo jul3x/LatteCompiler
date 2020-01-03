@@ -8,6 +8,7 @@
 *.slo
 *.lo
 *.o
+!lib/runtime.o
 *.obj
 
 # Precompiled Headers
@@ -34,3 +35,4 @@ latc_x86
 
 # Tests output
 *.s
+!lib/runtime.s
