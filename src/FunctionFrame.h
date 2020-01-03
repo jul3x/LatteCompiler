@@ -27,6 +27,19 @@ public:
         {
             return (function->second.find(std::make_pair(loc_ident, index)))->second;
         }
+
+        return 0;
+    }
+
+    int getNumberOfBytesAlloc(const std::string &fn_ident) {
+        auto bytes = bytes_alloc_.find(fn_ident);
+
+        if (bytes != bytes_alloc_.end())
+        {
+            return bytes->second;
+        }
+
+        return 0;
     }
 
     void generatePointers() {
@@ -35,6 +48,7 @@ public:
         for (auto &fun : func)
         {
             functions_.insert(std::make_pair(fun.first, Locals{}));
+            bytes_alloc_.insert(std::make_pair(fun.first, 0));
             generatePointers(fun.first);
         }
     }
@@ -47,7 +61,8 @@ public:
             for (const auto &loc : fun.second)
             {
                 fprintf(stderr, "%s, %d: %d\n", 
-                    loc.first.first.c_str(), loc.first.second, loc.second);
+                    loc.first.first.c_str(), loc.first.second,
+                    getPointer(fun.first, loc.first.first, loc.first.second));
             }
         }
     }
@@ -77,6 +92,7 @@ private:
                     function->second.insert(std::make_pair(
                         std::make_pair(std::get<0>(local), std::get<2>(local)), local_pos));
                     local_pos -= 4;
+                    bytes_alloc_.find(fn_ident)->second += 4;
                 }
             }
 
@@ -87,6 +103,7 @@ private:
     }
 
     std::unordered_map<std::string, Locals> functions_;
+    std::unordered_map<std::string, int> bytes_alloc_;
 };
 
 #endif

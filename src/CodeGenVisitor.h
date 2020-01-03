@@ -6,6 +6,8 @@
 class CodeGenVisitor : public Visitor
 {
 public:
+    CodeGenVisitor(bool get_pointer) : get_pointer_(get_pointer) {}
+
     void visitProgram(Program *p);
     void visitTopDef(TopDef *p);
     void visitClsFld(ClsFld *p);
@@ -101,6 +103,10 @@ public:
     void visitDouble(Double x);
     void visitString(String x);
     void visitIdent(Ident x);
+
+private:
+    bool get_pointer_;
+
 };
 
 #endif

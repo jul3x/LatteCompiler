@@ -485,6 +485,9 @@ void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
             "Identifier " + function_name + " does not exists as a function name!");
         return;
     }
+
+    no_init->index_of_var_ = index_of_var;
+    no_init->function_name_ = function_name;
 }
 
 void SemAnalysisVisitor::visitInit(Init *init)
