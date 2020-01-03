@@ -1,4 +1,5 @@
 .data
+format_string: .string "%s\n"
 format: .string "%d\n"
 error_str: .string "runtime error\n"
 scanf_int: .string "%d"
@@ -15,6 +16,7 @@ printString:
   pushl %ebp
   movl %esp, %ebp
   pushl 8(%ebp)
+  pushl $format_string
   call printf
   leave
   ret

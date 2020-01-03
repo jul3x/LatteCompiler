@@ -2,6 +2,7 @@
 #include "GlobalSymbols.h"
 #include "FunctionFrame.h"
 #include "CompilerOutput.h"
+#include "LabelGenerator.h"
 
 
 void CodeGenVisitor::visitProgram(Program *t)
@@ -29,7 +30,7 @@ void CodeGenVisitor::visitProg(Prog *prog)
 
 void CodeGenVisitor::visitFnDef(FnDef *fn_def)
 {
-    CompilerOutput::getInstance().printOutput(fn_def->ident_ + ":\n"
+    CompilerOutput::getInstance().printOutput("\n" + fn_def->ident_ + ":\n"
                                               "  pushl \%ebp\n"
                                               "  movl \%esp, \%ebp\n"
                                               "  pushl \%ebx\n");
@@ -41,6 +42,12 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
     visitIdent(fn_def->ident_);
     fn_def->listarg_->accept(this);
     fn_def->block_->accept(this);
+
+    if (GlobalSymbols::getInstance().getFunctionType(fn_def->ident_) == "void")
+    {
+        CompilerOutput::getInstance().printOutput("  leave\n"
+                                                  "  ret\n");
+    }
 }
 
 void CodeGenVisitor::visitClsDef(ClsDef *cls_def)
@@ -106,7 +113,7 @@ void CodeGenVisitor::visitDecl(Decl *decl)
 
 void CodeGenVisitor::visitAss(Ass *ass)
 {
-    CodeGenVisitor *get_p = new CodeGenVisitor(true);
+    CodeGenVisitor *get_p = new CodeGenVisitor(true, this->lt_, this->lf_, this->ln_);
     ass->expr_1->accept(get_p);
     delete get_p;
 
@@ -119,8 +126,8 @@ void CodeGenVisitor::visitAss(Ass *ass)
 
 void CodeGenVisitor::visitIncr(Incr *incr)
 {
-    CodeGenVisitor *get_p = new CodeGenVisitor(true);
-    incr->expr_->accept(this);
+    CodeGenVisitor *get_p = new CodeGenVisitor(true, this->lt_, this->lf_, this->ln_);
+    incr->expr_->accept(get_p);
     delete get_p;
 
     CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
@@ -130,8 +137,8 @@ void CodeGenVisitor::visitIncr(Incr *incr)
 
 void CodeGenVisitor::visitDecr(Decr *decr)
 {
-    CodeGenVisitor *get_p = new CodeGenVisitor(true);
-    decr->expr_->accept(this);
+    CodeGenVisitor *get_p = new CodeGenVisitor(true, this->lt_, this->lf_, this->ln_);
+    decr->expr_->accept(get_p);
     delete get_p;
 
     CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
@@ -146,42 +153,54 @@ void CodeGenVisitor::visitRet(Ret *ret)
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
     CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
-                                              "  ret\n\n");
+                                              "  ret\n");
 }
 
 void CodeGenVisitor::visitVRet(VRet *v_ret)
 {
     CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
-                                              "  ret\n\n");
+                                              "  ret\n");
 }
 
 void CodeGenVisitor::visitCond(Cond *cond)
 {
-    return;
-    //cond->expr_->accept(this);
     if (!cond->expr_->is_always_false_ && !cond->expr_->is_always_true_)
     {
+        auto after_if = LabelGenerator::getInstance().getNewLabel();
+        cond->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jz " + after_if + "\n");
+
         cond->stmt_->accept(this);
+        CompilerOutput::getInstance().printOutput(after_if + ":\n");
     }
     else if (cond->expr_->is_always_true_)
     {
         cond->stmt_->accept(this);
     }
-
-    // TODO
 }
 
 void CodeGenVisitor::visitCondElse(CondElse *cond_else)
 {
-    return;
-    //cond_else->expr_->accept(this);
-    //CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-
     if (!cond_else->expr_->is_always_false_ && !cond_else->expr_->is_always_true_)
     {
+        auto else_if = LabelGenerator::getInstance().getNewLabel();
+        auto after_if = LabelGenerator::getInstance().getNewLabel();
+        cond_else->expr_->accept(this);
+
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jz " + else_if + "\n");
+
         cond_else->stmt_1->accept(this);
+        CompilerOutput::getInstance().printOutput("  jmp " + after_if + "\n");
+
+        CompilerOutput::getInstance().printOutput(else_if + ":\n");
         cond_else->stmt_2->accept(this);
+
+        CompilerOutput::getInstance().printOutput(after_if + ":\n");
     }
     else if (cond_else->expr_->is_always_true_)
     {
@@ -191,14 +210,12 @@ void CodeGenVisitor::visitCondElse(CondElse *cond_else)
     {
         cond_else->stmt_2->accept(this);
     }
-
-    // TODO
 }
 
 void CodeGenVisitor::visitWhile(While *while_)
 {
     return;
-    while_->expr_->accept(this);
+    // while_->expr_->accept(this);
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
     // infinite loop
     if (while_->expr_->is_always_true_)
@@ -213,7 +230,7 @@ void CodeGenVisitor::visitWhile(While *while_)
 void CodeGenVisitor::visitFor(For *for_)
 {
     return;
-    for_->type_->accept(this);
+    // for_->type_->accept(this);
     visitIdent(for_->ident_);
 
     for_->expr_->accept(this);
@@ -313,8 +330,7 @@ void CodeGenVisitor::visitEClsVar(EClsVar *e_cls_var)
 
 void CodeGenVisitor::visitEArrVar(EArrVar *e_arr_var)
 {
-    return;
-    e_arr_var->expr_1->accept(this);
+    // e_arr_var->expr_1->accept(this);
     e_arr_var->expr_2->accept(this);
 }
 
@@ -544,16 +560,49 @@ void CodeGenVisitor::visitERel(ERel *e_rel)
 
 void CodeGenVisitor::visitEAnd(EAnd *e_and)
 {
-    return;
+    std::string lf = LabelGenerator::getInstance().getNewLabel();
+    std::string ln = LabelGenerator::getInstance().getNewLabel();
+
     e_and->expr_1->accept(this);
+
+    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+    CompilerOutput::getInstance().printOutput("  jz " + lf + "\n");
+
     e_and->expr_2->accept(this);
+    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+    CompilerOutput::getInstance().printOutput("  jz " + lf + "\n");
+
+    CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
+    CompilerOutput::getInstance().printOutput(lf + ":\n");
+    CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    CompilerOutput::getInstance().printOutput(ln + ":\n");
 }
 
 void CodeGenVisitor::visitEOr(EOr *e_or)
 {
-    return;
+    std::string lt = LabelGenerator::getInstance().getNewLabel();
+    std::string ln = LabelGenerator::getInstance().getNewLabel();
+
     e_or->expr_1->accept(this);
+
+    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+    CompilerOutput::getInstance().printOutput("  jnz " + lt + "\n");
+
     e_or->expr_2->accept(this);
+
+    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+    CompilerOutput::getInstance().printOutput("  jz " + lt + "\n");
+
+    CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
+    CompilerOutput::getInstance().printOutput(lt + ":\n");
+    CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    CompilerOutput::getInstance().printOutput(ln + ":\n");
 }
 
 void CodeGenVisitor::visitPlus(Plus *plus)
