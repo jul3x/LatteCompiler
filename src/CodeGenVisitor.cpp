@@ -424,6 +424,7 @@ void CodeGenVisitor::visitEVarNew(EVarNew *e_var_new)
 
 void CodeGenVisitor::visitEVStdNew(EVStdNew *ev_std_new)
 {
+    return;
     ev_std_new->stdtype_->accept(this);
 }
 
@@ -436,6 +437,7 @@ void CodeGenVisitor::visitEArrNew(EArrNew *e_arr_new)
 
 void CodeGenVisitor::visitEAStdNew(EAStdNew *ea_std_new)
 {
+    return;
     ea_std_new->stdtype_->accept(this);
     ea_std_new->expr_->accept(this);
 }
@@ -545,7 +547,6 @@ void CodeGenVisitor::visitEAdd(EAdd *e_add)
 
 void CodeGenVisitor::visitERel(ERel *e_rel)
 {
-    return;
     e_rel->expr_1->accept(this);
     e_rel->relop_->accept(this);
     e_rel->expr_2->accept(this);
@@ -556,6 +557,44 @@ void CodeGenVisitor::visitERel(ERel *e_rel)
     auto is_le = dynamic_cast<LE*>(e_rel->relop_);
     auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
     auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
+
+    CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    CompilerOutput::getInstance().printOutput("  cmp \%ecx, \%eax\n");
+
+    std::string lf = LabelGenerator::getInstance().getNewLabel();
+    std::string ln = LabelGenerator::getInstance().getNewLabel();
+
+    if (is_eq != nullptr)
+    {
+        CompilerOutput::getInstance().printOutput("  jne " + lf + " \n");
+    }
+    else if (is_neq != nullptr)
+    {
+        CompilerOutput::getInstance().printOutput("  je " + lf + "\n");
+    }
+    else if (is_lt != nullptr)
+    {
+        CompilerOutput::getInstance().printOutput("  jge " + lf + "\n");
+    }
+    else if (is_le != nullptr)
+    {
+        CompilerOutput::getInstance().printOutput("  jg " + lf + "\n");
+    }
+    else if (is_gt != nullptr)
+    {
+        CompilerOutput::getInstance().printOutput("  jle " + lf + "\n");
+    }
+    else if (is_ge != nullptr)
+    {
+        CompilerOutput::getInstance().printOutput("  jl " + lf + "\n");
+    }
+
+    CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
+    CompilerOutput::getInstance().printOutput(lf + ":\n");
+    CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    CompilerOutput::getInstance().printOutput(ln + ":\n");
 }
 
 void CodeGenVisitor::visitEAnd(EAnd *e_and)
@@ -596,7 +635,7 @@ void CodeGenVisitor::visitEOr(EOr *e_or)
 
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
     CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
-    CompilerOutput::getInstance().printOutput("  jz " + lt + "\n");
+    CompilerOutput::getInstance().printOutput("  jnz " + lt + "\n");
 
     CompilerOutput::getInstance().printOutput("  pushl $0\n");
     CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
