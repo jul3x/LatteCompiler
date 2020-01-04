@@ -32,8 +32,7 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
 {
     CompilerOutput::getInstance().printOutput("\n" + fn_def->ident_ + ":\n"
                                               "  pushl \%ebp\n"
-                                              "  movl \%esp, \%ebp\n"
-                                              "  pushl \%ebx\n");
+                                              "  movl \%esp, \%ebp\n");
     CompilerOutput::getInstance().printOutput("  sub $" + std::to_string(
         FunctionFrame::getInstance().getNumberOfBytesAlloc(fn_def->ident_)) +
         ", \%esp\n");
@@ -121,7 +120,7 @@ void CodeGenVisitor::visitAss(Ass *ass)
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
     CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
 
-    CompilerOutput::getInstance().printOutput("  movl \%eax, (\%ebp, \%ecx, 1)\n");
+    CompilerOutput::getInstance().printOutput("  movl \%eax, (\%ecx)\n");
 }
 
 void CodeGenVisitor::visitIncr(Incr *incr)
@@ -132,7 +131,7 @@ void CodeGenVisitor::visitIncr(Incr *incr)
 
     CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
 
-    CompilerOutput::getInstance().printOutput("  inc (\%ebp, \%ecx, 4)\n");
+    CompilerOutput::getInstance().printOutput("  incl (\%ecx)\n");
 }
 
 void CodeGenVisitor::visitDecr(Decr *decr)
@@ -143,7 +142,7 @@ void CodeGenVisitor::visitDecr(Decr *decr)
 
     CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
 
-    CompilerOutput::getInstance().printOutput("  dec (\%ebp, \%ecx, 4)\n");
+    CompilerOutput::getInstance().printOutput("  decl (\%ecx)\n");
 }
 
 void CodeGenVisitor::visitRet(Ret *ret)
@@ -151,14 +150,12 @@ void CodeGenVisitor::visitRet(Ret *ret)
     ret->expr_->accept(this);
 
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n");
 }
 
 void CodeGenVisitor::visitVRet(VRet *v_ret)
 {
-    CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n");
 }
@@ -214,17 +211,28 @@ void CodeGenVisitor::visitCondElse(CondElse *cond_else)
 
 void CodeGenVisitor::visitWhile(While *while_)
 {
-    return;
-    // while_->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    // infinite loop
-    if (while_->expr_->is_always_true_)
+    if (!while_->expr_->is_always_false_ && !while_->expr_->is_always_true_)
     {
+        auto while_cond = LabelGenerator::getInstance().getNewLabel();
+        auto while_body = LabelGenerator::getInstance().getNewLabel();
+        CompilerOutput::getInstance().printOutput("  jmp " + while_cond + "\n");
+
+        CompilerOutput::getInstance().printOutput(while_body + ":\n");
+        while_->stmt_->accept(this);
+
+        CompilerOutput::getInstance().printOutput(while_cond + ":\n");
+        while_->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jnz " + while_body + "\n");
     }
-
-    while_->stmt_->accept(this);
-
-    // TODO
+    else if (while_->expr_->is_always_true_)
+    {
+        auto while_body = LabelGenerator::getInstance().getNewLabel();
+        CompilerOutput::getInstance().printOutput(while_body + ":\n");
+        while_->stmt_->accept(this);
+        CompilerOutput::getInstance().printOutput("  jmp " + while_body + "\n");
+    }
 }
 
 void CodeGenVisitor::visitFor(For *for_)
@@ -314,9 +322,11 @@ void CodeGenVisitor::visitEVar(EVar *e_var)
             "(\%ebp)\n");
     else
     {
-        CompilerOutput::getInstance().printOutput("  pushl $" + std::to_string(
-            FunctionFrame::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
-            "\n");
+        CompilerOutput::getInstance().printOutput("  leal " +
+        std::to_string(FunctionFrame::getInstance().getPointer(
+                e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
+                "(\%ebp), \%eax\n");
+        CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
     }
 }
 
@@ -484,24 +494,24 @@ void CodeGenVisitor::visitEMul(EMul *e_mul)
     auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
     auto is_mod = dynamic_cast<Mod*>(e_mul->mulop_);
 
-    CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
+    CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
 
     if (is_mul != nullptr)
     {
-        CompilerOutput::getInstance().printOutput("  imul \%ebx, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  imul \%ecx, \%eax\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
     }
     else if (is_div != nullptr)
     {
         CompilerOutput::getInstance().printOutput("  cdq\n");
-        CompilerOutput::getInstance().printOutput("  idiv \%eax\n");
+        CompilerOutput::getInstance().printOutput("  idiv \%ecx\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
     }
     else
     {
         CompilerOutput::getInstance().printOutput("  cdq\n");
-        CompilerOutput::getInstance().printOutput("  idiv \%eax\n");
+        CompilerOutput::getInstance().printOutput("  idiv \%ecx\n");
         CompilerOutput::getInstance().printOutput("  pushl \%edx\n");
     }
 }

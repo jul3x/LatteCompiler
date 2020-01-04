@@ -1,0 +1,7 @@
+int main () {
+    int l = 2;
+    int h = 10;
+    int m = (l + h) / 2;
+    printInt(m);
+    return 0;
+}
