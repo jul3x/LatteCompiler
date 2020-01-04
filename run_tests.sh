@@ -16,10 +16,33 @@ function check()
         ./latc_x86 $f >> /dev/null
         if [[ $? -ne $2 ]] ; then
             echo -e "\e[92mOK!\e[0m"
-	        rm "${f%.*}"
+
+            if [[ $2 -eq 1 ]] ; then
+                if [[ -f "${f%.*}.input" ]] ; then
+                    cat "${f%.*}.input" | ./${f%.*} > ${f%.*}.output.temp
+                else
+                    ./${f%.*} > ${f%.*}.output.temp
+                fi
+
+                if [[ -f "${f%.*}.output" ]] ; then
+                    cmp "${f%.*}.output" "${f%.*}.output.temp"
+
+                    if [[ $? -eq 0 ]] ; then
+                        echo -e "\e[92mOK!\e[0m"
+                    else
+                        ERROR=1
+                        echo -e "\033[31mERROR OUTPUT!\e[0m"
+                    fi
+                else
+                    echo -e "\e[92mOK!\e[0m"
+                fi
+
+	            rm "${f%.*}"
+                rm "${f%.*}.output.temp"
+            fi
         else
             ERROR=1
-            echo -e "\033[31mERROR!\e[0m"
+            echo -e "\033[31mERROR COMPILATION!\e[0m"
         fi
     done
 

@@ -43,38 +43,69 @@ error:
 readString:
 	pushl	%ebp
 	movl	%esp, %ebp
+	pushl	%esi
 	pushl	%ebx
-	subl	$20, %esp
+	subl	$16, %esp
 	call	__x86.get_pc_thunk.bx
 	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
 	movl	%gs:20, %eax
 	movl	%eax, -12(%ebp)
 	xorl	%eax, %eax
-	movl	$120, -16(%ebp)
-	movl	-16(%ebp), %eax
+	movl	$120, -20(%ebp)
+	movl	-20(%ebp), %eax
 	subl	$12, %esp
 	pushl	%eax
 	call	malloc@PLT
 	addl	$16, %esp
-	movl	%eax, -20(%ebp)
+	movl	%eax, -16(%ebp)
+	movl	-16(%ebp), %eax
+	testl	%eax, %eax
+	jne	.L2
+	movl	$0, %eax
+	jmp	.L1
+.L2:
 	movl	stdin@GOT(%ebx), %eax
 	movl	(%eax), %eax
 	subl	$4, %esp
 	pushl	%eax
-	leal	-16(%ebp), %eax
-	pushl	%eax
 	leal	-20(%ebp), %eax
+	pushl	%eax
+	leal	-16(%ebp), %eax
 	pushl	%eax
 	call	getline@PLT
 	addl	$16, %esp
-	movl	-20(%ebp), %eax
+	movl	-16(%ebp), %esi
+	movl	-16(%ebp), %eax
+	subl	$12, %esp
+	pushl	%eax
+	call	strlen@PLT
+	addl	$16, %esp
+	subl	$1, %eax
+	addl	%esi, %eax
+	movzbl	(%eax), %eax
+	cmpb	$10, %al
+	jne	.L4
+	movl	-16(%ebp), %esi
+	movl	-16(%ebp), %eax
+	subl	$12, %esp
+	pushl	%eax
+	call	strlen@PLT
+	addl	$16, %esp
+	subl	$1, %eax
+	addl	%esi, %eax
+	movb	$0, (%eax)
+.L4:
+	movl	-16(%ebp), %eax
+.L1:
 	movl	-12(%ebp), %edx
 	xorl	%gs:20, %edx
-	je	.L3
+	je	.L6
 	call	__stack_chk_fail_local
-.L3:
-	movl	-4(%ebp), %ebx
-	leave
+.L6:
+	leal	-8(%ebp), %esp
+	popl	%ebx
+	popl	%esi
+	popl	%ebp
 	ret
 
 readInt:
