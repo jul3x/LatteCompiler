@@ -9,19 +9,12 @@ public:
     LabelGenerator(const LabelGenerator&) = delete;
     LabelGenerator& operator=(const LabelGenerator&) = delete;
 
-    static LabelGenerator& getInstance() {
-        static LabelGenerator instance;
-        return instance;
-    }
+    static LabelGenerator& getInstance();
 
-    std::string getNewLabel() {
-        return ".L" + std::to_string(++current_index_);
-    }
+    std::string getNewLabel();
 
 private:
-    LabelGenerator() {
-        current_index_ = 0;
-    }
+    LabelGenerator();
 
     unsigned int current_index_;
 };
