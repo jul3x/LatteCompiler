@@ -1231,7 +1231,8 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
     e_and->type_ = "boolean";
     e_and->is_lvalue_ = false;
 
-    if (e_and->expr_1->is_always_false_ || e_and->expr_2->is_always_false_)
+    // To not overoptimize
+    if (e_and->expr_1->is_always_false_ && e_and->expr_2->is_always_false_)
     {
         e_and->is_always_false_ = true;
         e_and->is_always_true_ = false;
@@ -1268,7 +1269,8 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
     e_or->type_ = "boolean";
     e_or->is_lvalue_ = false;
 
-    if (e_or->expr_1->is_always_true_ || e_or->expr_2->is_always_true_)
+    // To not overoptimize
+    if (e_or->expr_1->is_always_true_ && e_or->expr_2->is_always_true_)
     {
         e_or->is_always_false_ = false;
         e_or->is_always_true_ = true;

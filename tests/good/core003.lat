@@ -14,28 +14,7 @@ int g () {
       return 0;
 }
 
-boolean j() {
-  if (!false && (false || true)) return true;
-}
-
-boolean k() {
-  if (false == true)
-  {
-
-  }
-  else
-  {
-    return true;
-  }
-}
-
-int l() {
-  if (6 > 3)
-    return 2;
-}
-
 void p () {}
-  
 
 int main() {
   p();

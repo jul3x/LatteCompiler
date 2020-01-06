@@ -54,37 +54,22 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
 
 void CodeGenVisitor::visitClsDef(ClsDef *cls_def)
 {
-    /* Code For ClsDef Goes Here */
-
-    //visitIdent(cls_def->ident_);
-    //cls_def->listclsfld_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
-    /* Code For InhClsDef Goes Here */
-
-    //visitIdent(inh_cls_def->ident_1);
-    //visitIdent(inh_cls_def->ident_2);
-    //inh_cls_def->listclsfld_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitVarDef(VarDef *var_def)
 {
-    /* Code For VarDef Goes Here */
-
-    //var_def->type_->accept(this);
-    //var_def->listident_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitMetDef(MetDef *met_def)
 {
-    /* Code For MetDef Goes Here */
-
-    //met_def->type_->accept(this);
-    //visitIdent(met_def->ident_);
-    //met_def->listarg_->accept(this);
-    //met_def->block_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitAr(Ar *ar)
@@ -119,11 +104,31 @@ void CodeGenVisitor::visitAss(Ass *ass)
     ass->expr_1->accept(get_p);
     delete get_p;
 
-    ass->expr_2->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+    if (ass->expr_2->type_ == "boolean" && (ass->expr_2->is_always_false_ || ass->expr_2->is_always_true_))
+    {
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        if (ass->expr_2->is_always_false_)
+            CompilerOutput::getInstance().printOutput("  movl $0, (\%eax)\n");
+        else
+            CompilerOutput::getInstance().printOutput("  movl $-1, (\%eax)\n");
+    }
+    else if (ass->expr_2->type_ == "int" && ass->expr_2->has_value_)
+    {
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  movl $" + std::to_string(ass->expr_2->value_) +
+                ", (\%eax)\n");
+    }
+    else
+    {
+        ass->expr_2->accept(this);
 
-    CompilerOutput::getInstance().printOutput("  movl \%eax, (\%ecx)\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+
+        CompilerOutput::getInstance().printOutput("  movl \%eax, (\%ecx)\n");
+    }
+
+
 }
 
 void CodeGenVisitor::visitIncr(Incr *incr)
@@ -150,9 +155,24 @@ void CodeGenVisitor::visitDecr(Decr *decr)
 
 void CodeGenVisitor::visitRet(Ret *ret)
 {
-    ret->expr_->accept(this);
+    if (ret->expr_->type_ == "boolean" && (ret->expr_->is_always_false_ || ret->expr_->is_always_true_))
+    {
+        if (ret->expr_->is_always_false_)
+            CompilerOutput::getInstance().printOutput("  movl $0, \%eax\n");
+        else
+            CompilerOutput::getInstance().printOutput("  movl $-1, \%eax\n");
+    }
+    else if (ret->expr_->type_ == "int" && ret->expr_->has_value_)
+    {
+        CompilerOutput::getInstance().printOutput("  movl $" + std::to_string(ret->expr_->value_) +
+                ", \%eax\n");
+    }
+    else
+    {
+        ret->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    }
 
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
     CompilerOutput::getInstance().printOutput("  leave\n"
                                               "  ret\n");
 }
@@ -240,21 +260,24 @@ void CodeGenVisitor::visitWhile(While *while_)
 
 void CodeGenVisitor::visitFor(For *for_)
 {
-    return;
-    // for_->type_->accept(this);
-    visitIdent(for_->ident_);
-
-    for_->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-
-    for_->stmt_->accept(this);
     // TODO
 }
 
 void CodeGenVisitor::visitSExp(SExp *s_exp)
 {
-    s_exp->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    if (s_exp->expr_->type_ == "boolean" && (s_exp->expr_->is_always_false_ || s_exp->expr_->is_always_true_))
+    {
+        return;
+    }
+    else if (s_exp->expr_->type_ == "int" && s_exp->expr_->has_value_)
+    {
+        return;
+    }
+    else
+    {
+        s_exp->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+    }
 }
 
 void CodeGenVisitor::visitNoInit(NoInit *no_init)
@@ -266,11 +289,34 @@ void CodeGenVisitor::visitNoInit(NoInit *no_init)
 
 void CodeGenVisitor::visitInit(Init *init)
 {
-    init->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  movl \%eax, " + std::to_string(
-        FunctionFrame::getInstance().getPointer(init->function_name_, init->ident_, init->index_of_var_)) +
-        "(\%ebp)\n");
+    if (init->expr_->type_ == "boolean" && (init->expr_->is_always_false_ || init->expr_->is_always_true_))
+    {
+        if (init->expr_->is_always_false_)
+            CompilerOutput::getInstance().printOutput("  movl $0, " + std::to_string(
+                    FunctionFrame::getInstance().getPointer(
+                        init->function_name_, init->ident_, init->index_of_var_)) +
+                    "(\%ebp)\n");
+        else
+            CompilerOutput::getInstance().printOutput("  movl $-1, " + std::to_string(
+                    FunctionFrame::getInstance().getPointer(
+                        init->function_name_, init->ident_, init->index_of_var_)) +
+                    "(\%ebp)\n");
+    }
+    else if (init->expr_->type_ == "int" && init->expr_->has_value_)
+    {
+        CompilerOutput::getInstance().printOutput("  movl $" + std::to_string(init->expr_->value_) +
+                ", " + std::to_string(FunctionFrame::getInstance().getPointer(
+                    init->function_name_, init->ident_, init->index_of_var_)) +
+                "(\%ebp)\n");
+    }
+    else
+    {
+        init->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  movl \%eax, " + std::to_string(
+            FunctionFrame::getInstance().getPointer(init->function_name_, init->ident_, init->index_of_var_)) +
+            "(\%ebp)\n");
+    }
 }
 
 void CodeGenVisitor::visitInt(Int *int_)
@@ -335,16 +381,12 @@ void CodeGenVisitor::visitEVar(EVar *e_var)
 
 void CodeGenVisitor::visitEClsVar(EClsVar *e_cls_var)
 {
-    /* Code For EClsVar Goes Here */
-
-    //e_cls_var->expr_->accept(this);
-    //visitIdent(e_cls_var->ident_);
+    // TODO
 }
 
 void CodeGenVisitor::visitEArrVar(EArrVar *e_arr_var)
 {
-    // e_arr_var->expr_1->accept(this);
-    e_arr_var->expr_2->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitELitInt(ELitInt *e_lit_int)
@@ -411,132 +453,205 @@ void CodeGenVisitor::visitEApp(EApp *e_app)
 
 void CodeGenVisitor::visitEClsApp(EClsApp *e_cls_app)
 {
-    /* Code For EClsApp Goes Here */
-
-    //e_cls_app->expr_->accept(this);
-    //visitIdent(e_cls_app->ident_);
-    //e_cls_app->listexpr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitENeg(ENeg *e_neg)
 {
-    e_neg->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  negl (\%esp)\n");
+    if (e_neg->expr_->has_value_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $" +
+            std::to_string(-e_neg->expr_->value_) + "\n");
+    }
+    else
+    {
+        e_neg->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  negl (\%esp)\n");
+    }
 }
 
 void CodeGenVisitor::visitENot(ENot *e_not)
 {
-    e_not->expr_->accept(this);
-    CompilerOutput::getInstance().printOutput("  notl (\%esp)\n");
+    if (e_not->expr_->is_always_false_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    }
+    else if (e_not->expr_->is_always_true_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    }
+    else
+    {
+        e_not->expr_->accept(this);
+        CompilerOutput::getInstance().printOutput("  notl (\%esp)\n");
+    }
 }
 
 void CodeGenVisitor::visitEVarNew(EVarNew *e_var_new)
 {
-    /* Code For EVarNew Goes Here */
-
-    //visitIdent(e_var_new->ident_);
+    // TODO
 }
 
 void CodeGenVisitor::visitEVStdNew(EVStdNew *ev_std_new)
 {
-    return;
-    ev_std_new->stdtype_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEArrNew(EArrNew *e_arr_new)
 {
-
-    //visitIdent(e_arr_new->ident_);
-    //e_arr_new->expr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEAStdNew(EAStdNew *ea_std_new)
 {
-    return;
-    ea_std_new->stdtype_->accept(this);
-    ea_std_new->expr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEVarCast(EVarCast *e_var_cast)
 {
-    /* Code For EVarCast Goes Here */
-
-    //visitIdent(e_var_cast->ident_);
-    //e_var_cast->expr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEVStdCast(EVStdCast *ev_std_cast)
 {
-    /* Code For EVStdCast Goes Here */
-
-    //ev_std_cast->stdtype_->accept(this);
-    //ev_std_cast->expr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEArrCast(EArrCast *e_arr_cast)
 {
-    /* Code For EArrCast Goes Here */
-
-    //visitIdent(e_arr_cast->ident_);
-   // e_arr_cast->expr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEAStdCast(EAStdCast *ea_std_cast)
 {
-    /* Code For EAStdCast Goes Here */
-
-    //ea_std_cast->stdtype_->accept(this);
-    //ea_std_cast->expr_->accept(this);
+    // TODO
 }
 
 void CodeGenVisitor::visitEMul(EMul *e_mul)
 {
-    e_mul->expr_1->accept(this);
-    e_mul->mulop_->accept(this);
-    e_mul->expr_2->accept(this);
-
     auto is_mul = dynamic_cast<Times*>(e_mul->mulop_);
     auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
     auto is_mod = dynamic_cast<Mod*>(e_mul->mulop_);
 
-
-
     if (is_mul != nullptr)
     {
-        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-        CompilerOutput::getInstance().printOutput("  imul (\%esp), \%eax\n");
-        CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
+        if (e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $" +
+                std::to_string(e_mul->expr_1->value_ * e_mul->expr_2->value_) + "\n");
+        }
+        else if (e_mul->expr_1->has_value_ && !e_mul->expr_2->has_value_)
+        {
+            e_mul->expr_2->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  imull $" +
+                std::to_string(e_mul->expr_1->value_) + ", \%eax\n");
+            CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
+        }
+        else if (!e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
+        {
+            e_mul->expr_1->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  imull $" +
+                std::to_string(e_mul->expr_2->value_) + ", \%eax\n");
+            CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
+        }
+        else
+        {
+            e_mul->expr_1->accept(this);
+            e_mul->expr_2->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  imull (\%esp), \%eax\n");
+            CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
+        }
     }
     else if (is_div != nullptr)
     {
-        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
-        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-        CompilerOutput::getInstance().printOutput("  cdq\n");
-        CompilerOutput::getInstance().printOutput("  idiv \%ecx\n");
-        CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        if (e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $" +
+                std::to_string(e_mul->expr_1->value_ / e_mul->expr_2->value_) + "\n");
+        }
+        else if (e_mul->expr_1->has_value_ && !e_mul->expr_2->has_value_)
+        {
+            e_mul->expr_2->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  movl $" +
+                std::to_string(e_mul->expr_1->value_) + ", \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cdq\n");
+            CompilerOutput::getInstance().printOutput("  idivl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        }
+        else if (!e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
+        {
+            e_mul->expr_1->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cdq\n");
+            CompilerOutput::getInstance().printOutput("  movl $" +
+                std::to_string(e_mul->expr_2->value_) + ", \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  idivl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        }
+        else
+        {
+            e_mul->expr_1->accept(this);
+            e_mul->expr_2->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cdq\n");
+            CompilerOutput::getInstance().printOutput("  idivl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        }
     }
     else
     {
-        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
-        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-        CompilerOutput::getInstance().printOutput("  cdq\n");
-        CompilerOutput::getInstance().printOutput("  idiv \%ecx\n");
-        CompilerOutput::getInstance().printOutput("  pushl \%edx\n");
+        if (e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $" +
+                std::to_string(e_mul->expr_1->value_ % e_mul->expr_2->value_) + "\n");
+        }
+        else if (e_mul->expr_1->has_value_ && !e_mul->expr_2->has_value_)
+        {
+            e_mul->expr_2->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  movl $" +
+                std::to_string(e_mul->expr_1->value_) + ", \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cdq\n");
+            CompilerOutput::getInstance().printOutput("  idivl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%edx\n");
+        }
+        else if (!e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
+        {
+            e_mul->expr_1->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cdq\n");
+            CompilerOutput::getInstance().printOutput("  movl $" +
+                std::to_string(e_mul->expr_2->value_) + ", \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  idivl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%edx\n");
+        }
+        else
+        {
+            e_mul->expr_1->accept(this);
+            e_mul->expr_2->accept(this);
+            CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cdq\n");
+            CompilerOutput::getInstance().printOutput("  idivl \%ecx\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%edx\n");
+        }
     }
 }
 
 void CodeGenVisitor::visitEAdd(EAdd *e_add)
 {
-    e_add->expr_1->accept(this);
-    e_add->addop_->accept(this);
-    e_add->expr_2->accept(this);
-
     auto is_plus = dynamic_cast<Plus*>(e_add->addop_);
 
     if (e_add->expr_1->type_ == "string" &&
         e_add->expr_2->type_ == "string")
     {
-
+        e_add->expr_1->accept(this);
+        e_add->expr_2->accept(this);
         CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
@@ -544,119 +659,196 @@ void CodeGenVisitor::visitEAdd(EAdd *e_add)
         CompilerOutput::getInstance().printOutput("  call __Latte._helper_function._addStrings\n");
         CompilerOutput::getInstance().printOutput("  add $8, \%esp\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
-
     }
     else if (e_add->expr_1->type_ == "int" &&
              e_add->expr_2->type_ == "int")
     {
-        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         if (is_plus != nullptr)
         {
-            CompilerOutput::getInstance().printOutput("  add \%eax, (\%esp)\n");
+            if (e_add->expr_1->has_value_ && e_add->expr_2->has_value_)
+            {
+                CompilerOutput::getInstance().printOutput("  pushl $" +
+                    std::to_string(e_add->expr_1->value_ + e_add->expr_2->value_) + "\n");
+            }
+            else if (e_add->expr_1->has_value_ && !e_add->expr_2->has_value_)
+            {
+                e_add->expr_2->accept(this);
+                CompilerOutput::getInstance().printOutput("  addl $" +
+                    std::to_string(e_add->expr_1->value_) + ", (%esp)\n");
+            }
+            else if (!e_add->expr_1->has_value_ && e_add->expr_2->has_value_)
+            {
+                e_add->expr_1->accept(this);
+                CompilerOutput::getInstance().printOutput("  addl $" +
+                    std::to_string(e_add->expr_2->value_) + ", (%esp)\n");
+            }
+            else
+            {
+                e_add->expr_1->accept(this);
+                e_add->expr_2->accept(this);
+                CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+                CompilerOutput::getInstance().printOutput("  addl \%eax, (\%esp)\n");
+            }
         }
         else
         {
-            CompilerOutput::getInstance().printOutput("  sub \%eax, (\%esp)\n");
+            if (e_add->expr_1->has_value_ && e_add->expr_2->has_value_)
+            {
+                CompilerOutput::getInstance().printOutput("  pushl $" +
+                    std::to_string(e_add->expr_1->value_ - e_add->expr_2->value_) + "\n");
+            }
+            else if (e_add->expr_1->has_value_ && !e_add->expr_2->has_value_)
+            {
+                e_add->expr_2->accept(this);
+                CompilerOutput::getInstance().printOutput("  subl $" +
+                    std::to_string(e_add->expr_1->value_) + ", (%esp)\n");
+                CompilerOutput::getInstance().printOutput("  negl (%esp)\n");
+            }
+            else if (!e_add->expr_1->has_value_ && e_add->expr_2->has_value_)
+            {
+                e_add->expr_1->accept(this);
+                CompilerOutput::getInstance().printOutput("  subl $" +
+                    std::to_string(e_add->expr_2->value_) + ", (%esp)\n");
+            }
+            else
+            {
+                e_add->expr_1->accept(this);
+                e_add->expr_2->accept(this);
+                CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+                CompilerOutput::getInstance().printOutput("  subl \%eax, (\%esp)\n");
+            }
         }
     }
 }
 
 void CodeGenVisitor::visitERel(ERel *e_rel)
 {
-    e_rel->expr_1->accept(this);
-    e_rel->relop_->accept(this);
-    e_rel->expr_2->accept(this);
+    if (e_rel->is_always_true_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    }
+    else if (e_rel->is_always_false_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    }
+    else
+    {
+        e_rel->expr_1->accept(this);
+        e_rel->expr_2->accept(this);
 
-    auto is_eq = dynamic_cast<EQU*>(e_rel->relop_);
-    auto is_neq = dynamic_cast<NE*>(e_rel->relop_);
-    auto is_lt = dynamic_cast<LTH*>(e_rel->relop_);
-    auto is_le = dynamic_cast<LE*>(e_rel->relop_);
-    auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
-    auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
+        auto is_eq = dynamic_cast<EQU*>(e_rel->relop_);
+        auto is_neq = dynamic_cast<NE*>(e_rel->relop_);
+        auto is_lt = dynamic_cast<LTH*>(e_rel->relop_);
+        auto is_le = dynamic_cast<LE*>(e_rel->relop_);
+        auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
+        auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
 
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  cmpl \%eax, (\%esp)\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  cmpl \%eax, (\%esp)\n");
 
-    std::string lf = LabelGenerator::getInstance().getNewLabel();
-    std::string ln = LabelGenerator::getInstance().getNewLabel();
+        std::string lf = LabelGenerator::getInstance().getNewLabel();
+        std::string ln = LabelGenerator::getInstance().getNewLabel();
 
-    if (is_eq != nullptr)
-    {
-        CompilerOutput::getInstance().printOutput("  jne " + lf + " \n");
-    }
-    else if (is_neq != nullptr)
-    {
-        CompilerOutput::getInstance().printOutput("  je " + lf + "\n");
-    }
-    else if (is_lt != nullptr)
-    {
-        CompilerOutput::getInstance().printOutput("  jge " + lf + "\n");
-    }
-    else if (is_le != nullptr)
-    {
-        CompilerOutput::getInstance().printOutput("  jg " + lf + "\n");
-    }
-    else if (is_gt != nullptr)
-    {
-        CompilerOutput::getInstance().printOutput("  jle " + lf + "\n");
-    }
-    else if (is_ge != nullptr)
-    {
-        CompilerOutput::getInstance().printOutput("  jl " + lf + "\n");
-    }
+        if (is_eq != nullptr)
+        {
+            CompilerOutput::getInstance().printOutput("  jne " + lf + " \n");
+        }
+        else if (is_neq != nullptr)
+        {
+            CompilerOutput::getInstance().printOutput("  je " + lf + "\n");
+        }
+        else if (is_lt != nullptr)
+        {
+            CompilerOutput::getInstance().printOutput("  jge " + lf + "\n");
+        }
+        else if (is_le != nullptr)
+        {
+            CompilerOutput::getInstance().printOutput("  jg " + lf + "\n");
+        }
+        else if (is_gt != nullptr)
+        {
+            CompilerOutput::getInstance().printOutput("  jle " + lf + "\n");
+        }
+        else if (is_ge != nullptr)
+        {
+            CompilerOutput::getInstance().printOutput("  jl " + lf + "\n");
+        }
 
-    CompilerOutput::getInstance().printOutput("  movl $-1, (\%esp)\n");
-    CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
-    CompilerOutput::getInstance().printOutput(lf + ":\n");
-    CompilerOutput::getInstance().printOutput("  movl $0, (\%esp)\n");
-    CompilerOutput::getInstance().printOutput(ln + ":\n");
+        CompilerOutput::getInstance().printOutput("  movl $-1, (\%esp)\n");
+        CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
+        CompilerOutput::getInstance().printOutput(lf + ":\n");
+        CompilerOutput::getInstance().printOutput("  movl $0, (\%esp)\n");
+        CompilerOutput::getInstance().printOutput(ln + ":\n");
+    }
 }
 
 void CodeGenVisitor::visitEAnd(EAnd *e_and)
 {
-    std::string lf = LabelGenerator::getInstance().getNewLabel();
-    std::string ln = LabelGenerator::getInstance().getNewLabel();
+    if (e_and->is_always_true_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    }
+    else if (e_and->is_always_false_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    }
+    else
+    {
+        std::string lf = LabelGenerator::getInstance().getNewLabel();
+        std::string ln = LabelGenerator::getInstance().getNewLabel();
 
-    e_and->expr_1->accept(this);
+        e_and->expr_1->accept(this);
 
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
-    CompilerOutput::getInstance().printOutput("  jz " + lf + "\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jz " + lf + "\n");
 
-    e_and->expr_2->accept(this);
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
-    CompilerOutput::getInstance().printOutput("  jz " + lf + "\n");
+        e_and->expr_2->accept(this);
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jz " + lf + "\n");
 
-    CompilerOutput::getInstance().printOutput("  pushl $-1\n");
-    CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
-    CompilerOutput::getInstance().printOutput(lf + ":\n");
-    CompilerOutput::getInstance().printOutput("  pushl $0\n");
-    CompilerOutput::getInstance().printOutput(ln + ":\n");
+        CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+        CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
+        CompilerOutput::getInstance().printOutput(lf + ":\n");
+        CompilerOutput::getInstance().printOutput("  pushl $0\n");
+        CompilerOutput::getInstance().printOutput(ln + ":\n");
+    }
 }
 
 void CodeGenVisitor::visitEOr(EOr *e_or)
 {
-    std::string lt = LabelGenerator::getInstance().getNewLabel();
-    std::string ln = LabelGenerator::getInstance().getNewLabel();
+    if (e_or->is_always_true_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    }
+    else if (e_or->is_always_false_)
+    {
+        CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    }
+    else
+    {
+        std::string lt = LabelGenerator::getInstance().getNewLabel();
+        std::string ln = LabelGenerator::getInstance().getNewLabel();
 
-    e_or->expr_1->accept(this);
+        e_or->expr_1->accept(this);
 
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
-    CompilerOutput::getInstance().printOutput("  jnz " + lt + "\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jnz " + lt + "\n");
 
-    e_or->expr_2->accept(this);
+        e_or->expr_2->accept(this);
 
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
-    CompilerOutput::getInstance().printOutput("  jnz " + lt + "\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+        CompilerOutput::getInstance().printOutput("  jnz " + lt + "\n");
 
-    CompilerOutput::getInstance().printOutput("  pushl $0\n");
-    CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
-    CompilerOutput::getInstance().printOutput(lt + ":\n");
-    CompilerOutput::getInstance().printOutput("  pushl $-1\n");
-    CompilerOutput::getInstance().printOutput(ln + ":\n");
+        CompilerOutput::getInstance().printOutput("  pushl $0\n");
+        CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
+        CompilerOutput::getInstance().printOutput(lt + ":\n");
+        CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+        CompilerOutput::getInstance().printOutput(ln + ":\n");
+    }
 }
 
 void CodeGenVisitor::visitPlus(Plus *plus)
