@@ -127,7 +127,7 @@ int main(int argc, char **argv)
                     CompilerOutput::getInstance().printOutput(".globl " + fun.first + "\n");
             }
 
-            CodeGenVisitor *code_gen = new CodeGenVisitor(false, "", "", "");
+            CodeGenVisitor *code_gen = new CodeGenVisitor(false);
             code_gen->visitProgram(parse_tree);
             delete code_gen;
 

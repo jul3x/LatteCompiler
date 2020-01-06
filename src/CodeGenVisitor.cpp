@@ -33,9 +33,12 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
     CompilerOutput::getInstance().printOutput("\n" + fn_def->ident_ + ":\n"
                                               "  pushl \%ebp\n"
                                               "  movl \%esp, \%ebp\n");
-    CompilerOutput::getInstance().printOutput("  sub $" + std::to_string(
-        FunctionFrame::getInstance().getNumberOfBytesAlloc(fn_def->ident_)) +
-        ", \%esp\n");
+
+    auto bytes_to_alloc = FunctionFrame::getInstance().getNumberOfBytesAlloc(fn_def->ident_);
+
+    if (bytes_to_alloc > 0)
+        CompilerOutput::getInstance().printOutput("  sub $" + std::to_string(bytes_to_alloc) +
+                ", \%esp\n");
 
     fn_def->type_->accept(this);
     visitIdent(fn_def->ident_);
@@ -112,7 +115,7 @@ void CodeGenVisitor::visitDecl(Decl *decl)
 
 void CodeGenVisitor::visitAss(Ass *ass)
 {
-    CodeGenVisitor *get_p = new CodeGenVisitor(true, this->lt_, this->lf_, this->ln_);
+    CodeGenVisitor *get_p = new CodeGenVisitor(true);
     ass->expr_1->accept(get_p);
     delete get_p;
 
@@ -125,7 +128,7 @@ void CodeGenVisitor::visitAss(Ass *ass)
 
 void CodeGenVisitor::visitIncr(Incr *incr)
 {
-    CodeGenVisitor *get_p = new CodeGenVisitor(true, this->lt_, this->lf_, this->ln_);
+    CodeGenVisitor *get_p = new CodeGenVisitor(true);
     incr->expr_->accept(get_p);
     delete get_p;
 
@@ -136,7 +139,7 @@ void CodeGenVisitor::visitIncr(Incr *incr)
 
 void CodeGenVisitor::visitDecr(Decr *decr)
 {
-    CodeGenVisitor *get_p = new CodeGenVisitor(true, this->lt_, this->lf_, this->ln_);
+    CodeGenVisitor *get_p = new CodeGenVisitor(true);
     decr->expr_->accept(get_p);
     delete get_p;
 
@@ -399,8 +402,10 @@ void CodeGenVisitor::visitEApp(EApp *e_app)
 
     CompilerOutput::getInstance().printOutput("  call " + e_app->ident_ + "\n");
 
-    CompilerOutput::getInstance().printOutput("  add $" +
-            std::to_string(4 * e_app->listexpr_->size()) + ", \%esp\n");
+    if (!e_app->listexpr_->empty())
+        CompilerOutput::getInstance().printOutput("  add $" +
+                std::to_string(4 * e_app->listexpr_->size()) + ", \%esp\n");
+
     CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
 }
 
@@ -494,22 +499,26 @@ void CodeGenVisitor::visitEMul(EMul *e_mul)
     auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
     auto is_mod = dynamic_cast<Mod*>(e_mul->mulop_);
 
-    CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
-    CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+
 
     if (is_mul != nullptr)
     {
-        CompilerOutput::getInstance().printOutput("  imul \%ecx, \%eax\n");
-        CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  imul (\%esp), \%eax\n");
+        CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
     }
     else if (is_div != nullptr)
     {
+        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         CompilerOutput::getInstance().printOutput("  cdq\n");
         CompilerOutput::getInstance().printOutput("  idiv \%ecx\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
     }
     else
     {
+        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
+        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         CompilerOutput::getInstance().printOutput("  cdq\n");
         CompilerOutput::getInstance().printOutput("  idiv \%ecx\n");
         CompilerOutput::getInstance().printOutput("  pushl \%edx\n");
@@ -528,10 +537,10 @@ void CodeGenVisitor::visitEAdd(EAdd *e_add)
         e_add->expr_2->type_ == "string")
     {
 
-        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
         CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-        CompilerOutput::getInstance().printOutput("  pushl \%ecx\n");
+        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+        CompilerOutput::getInstance().printOutput("  pushl \%ecx\n");
         CompilerOutput::getInstance().printOutput("  call __Latte._helper_function._addStrings\n");
         CompilerOutput::getInstance().printOutput("  add $8, \%esp\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
@@ -540,17 +549,14 @@ void CodeGenVisitor::visitEAdd(EAdd *e_add)
     else if (e_add->expr_1->type_ == "int" &&
              e_add->expr_2->type_ == "int")
     {
-        CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
         CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         if (is_plus != nullptr)
         {
-            CompilerOutput::getInstance().printOutput("  add \%ecx, \%eax\n");
-            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  add \%eax, (\%esp)\n");
         }
         else
         {
-            CompilerOutput::getInstance().printOutput("  sub \%ecx, \%eax\n");
-            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  sub \%eax, (\%esp)\n");
         }
     }
 }
@@ -568,9 +574,8 @@ void CodeGenVisitor::visitERel(ERel *e_rel)
     auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
     auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
 
-    CompilerOutput::getInstance().printOutput("  popl \%ecx\n");
     CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-    CompilerOutput::getInstance().printOutput("  cmp \%ecx, \%eax\n");
+    CompilerOutput::getInstance().printOutput("  cmpl \%eax, (\%esp)\n");
 
     std::string lf = LabelGenerator::getInstance().getNewLabel();
     std::string ln = LabelGenerator::getInstance().getNewLabel();
@@ -600,10 +605,10 @@ void CodeGenVisitor::visitERel(ERel *e_rel)
         CompilerOutput::getInstance().printOutput("  jl " + lf + "\n");
     }
 
-    CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+    CompilerOutput::getInstance().printOutput("  movl $-1, (\%esp)\n");
     CompilerOutput::getInstance().printOutput("  jmp " + ln + "\n");
     CompilerOutput::getInstance().printOutput(lf + ":\n");
-    CompilerOutput::getInstance().printOutput("  pushl $0\n");
+    CompilerOutput::getInstance().printOutput("  movl $0, (\%esp)\n");
     CompilerOutput::getInstance().printOutput(ln + ":\n");
 }
 

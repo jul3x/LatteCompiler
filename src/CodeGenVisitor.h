@@ -6,13 +6,7 @@
 class CodeGenVisitor : public Visitor
 {
 public:
-    CodeGenVisitor(bool get_pointer,
-                   const std::string &lt,
-                   const std::string &lf,
-                   const std::string &ln) : get_pointer_(get_pointer),
-                                            lt_(lt),
-                                            lf_(lf),
-                                            ln_(ln) {}
+    CodeGenVisitor(bool get_pointer) : get_pointer_(get_pointer) {}
 
     void visitProgram(Program *p);
     void visitTopDef(TopDef *p);
@@ -112,8 +106,6 @@ public:
 
 private:
     bool get_pointer_;
-
-    std::string lt_, lf_, ln_;
 
 };
 
