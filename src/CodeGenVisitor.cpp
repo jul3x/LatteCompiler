@@ -518,7 +518,6 @@ void CodeGenVisitor::visitEMul(EMul *e_mul)
 {
     auto is_mul = dynamic_cast<Times*>(e_mul->mulop_);
     auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
-    auto is_mod = dynamic_cast<Mod*>(e_mul->mulop_);
 
     if (is_mul != nullptr)
     {

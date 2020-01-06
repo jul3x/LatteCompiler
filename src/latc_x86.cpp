@@ -2,7 +2,6 @@
 #include <string>
 
 #include "Parser.h"
-#include "Printer.h"
 #include "Absyn.h"
 #include "SemAnalysisVisitor.h"
 #include "CodeGenVisitor.h"
@@ -12,41 +11,25 @@
 #include "CompilerOutput.h"
 #include "FunctionFrame.h"
 #include "Utils.h"
+#include "Postprocess.h"
 
 
 void usage()
 {
     printf("usage: Call with one of the following argument combinations:\n");
     printf("\t--help\t\tDisplay this help message.\n");
-    printf("\t(no arguments)	Parse stdin verbosely.\n");
-    printf("\t(files)\t\tParse content of files verbosely.\n");
-    printf("\t-s (files)\tSilent mode. Parse content of files silently.\n");
+    printf("\t(no arguments)	Compile stdin.\n");
+    printf("\t(files)\t\tCompile content of files.\n");
 }
 
 int main(int argc, char **argv)
 {
     FILE *input;
-    int quiet = 0;
     char *filename = NULL;
 
     if (argc > 1)
     {
-        if (strcmp(argv[1], "-s") == 0)
-        {
-            quiet = 1;
-            if (argc > 2)
-            {
-                filename = argv[2];
-            }
-            else
-            {
-                input = stdin;
-            }
-        }
-        else
-        {
-            filename = argv[1];
-        }
+        filename = argv[1];
     }
 
     if (filename)
@@ -107,7 +90,7 @@ int main(int argc, char **argv)
         {
             FunctionFrame::getInstance().generatePointers();
 
-            CompilerOutput::getInstance().initializeOutputFile(out_file);
+            CompilerOutput::getInstance().initializeOutputFile(out_file + ".bak");
 
             CompilerOutput::getInstance().printOutput(".data\n\n");
 
@@ -131,6 +114,13 @@ int main(int argc, char **argv)
             delete code_gen;
 
             CompilerOutput::getInstance().deinitializeOutputFile();
+
+            Postprocess *postprocess = new Postprocess();
+            postprocess->initialize(out_file + ".bak", out_file);
+            postprocess->execute();
+            postprocess->deinitialize();
+
+            delete postprocess;
 
             std::string exec_param = argv[0];
             auto last_slash_iter = exec_param.find_last_of('/');

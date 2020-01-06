@@ -294,7 +294,7 @@ public:
     std::string type_;
     bool is_lvalue_;
 
-    bool is_always_true_, is_always_false_;
+    bool is_always_false_, is_always_true_;
 
     bool has_value_;
     int value_;

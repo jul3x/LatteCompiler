@@ -86,7 +86,7 @@ bool ControlFlow::setTermination(const std::string &type) {
 }
 
 void ControlFlow::prettyPrint() {
-    int i = 0, j = 0, k = 0;
+    int i = 0, j = 0;
     for (const auto &fun : simple_blocks_)
     {
         fprintf(stderr, "Fun%d: \n", i);

@@ -679,7 +679,7 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
         return;
     }
 
-    for (int i = 0; i < args->size(); ++ i)
+    for (size_t i = 0; i < args->size(); ++i)
     {
         if (e_app->listexpr_->at(i)->type_ != args->at(i)->getType())
         {

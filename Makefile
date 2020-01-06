@@ -7,10 +7,10 @@ FLEX_OPTS=-PLatte
 BISON=bison
 BISON_OPTS=-t -pLatte
 
-OBJS=Absyn.o Lexer.o Parser.o Printer.o \
+OBJS=Absyn.o Lexer.o Parser.o \
 	 SemAnalysisVisitor.o GlobalSymbolsCollector.o CodeGenVisitor.o \
 	 CompilerOutput.o ControlFlow.o FunctionFrame.o GlobalSymbols.o \
-	 LabelGenerator.o LocalSymbols.o
+	 LabelGenerator.o LocalSymbols.o Postprocess.o
 .PHONY: clean distclean
 
 all: latc_x86
@@ -21,7 +21,7 @@ clean:
 
 latc_x86: ${OBJS} latc_x86.o
 	@echo "Linking latc_x86..."
-	${CC} ${CCFLAGS} ${OBJS} latc_x86.o -o latc_x86
+	${CC} ${CCFLAGS} ${OBJS} -Wno-unused-parameter latc_x86.o -o latc_x86
 
 Absyn.o: src/Absyn.cpp src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/Absyn.cpp
@@ -33,13 +33,10 @@ src/Parser.cpp: src/Latte.y
 	${BISON} src/Latte.y -o src/Parser.cpp
 
 Lexer.o: src/Lexer.cpp src/Parser.h
-	${CC} ${CCFLAGS} -c src/Lexer.cpp
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/Lexer.cpp
 
 Parser.o: src/Parser.cpp src/Absyn.h
-	${CC} ${CCFLAGS} -c src/Parser.cpp
-
-Printer.o: src/Printer.cpp src/Printer.h src/Absyn.h
-	${CC} ${CCFLAGS} -c src/Printer.cpp
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/Parser.cpp
 
 SemAnalysisVisitor.o: src/SemAnalysisVisitor.cpp src/SemAnalysisVisitor.h src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/SemAnalysisVisitor.cpp
@@ -68,9 +65,12 @@ LabelGenerator.o: src/LabelGenerator.cpp src/LabelGenerator.h
 LocalSymbols.o: src/LocalSymbols.cpp src/LocalSymbols.h src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/LocalSymbols.cpp
 
-latc_x86.o: src/latc_x86.cpp src/Parser.h src/Printer.h src/Absyn.h \
+Postprocess.o: src/Postprocess.cpp src/Postprocess.h
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/Postprocess.cpp
+
+latc_x86.o: src/latc_x86.cpp src/Parser.h src/Absyn.h \
 	src/SemAnalysisVisitor.h src/CodeGenVisitor.h \
 	src/GlobalSymbolsCollector.h src/GlobalSymbols.h \
 	src/ControlFlow.h src/CompilerOutput.h \
-	src/FunctionFrame.h src/Utils.h
-	${CC} ${CCFLAGS} -c src/latc_x86.cpp
+	src/FunctionFrame.h src/Utils.h src/Postprocess.h
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/latc_x86.cpp
