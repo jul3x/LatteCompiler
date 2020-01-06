@@ -9,18 +9,6 @@ public:
     CodeGenVisitor(bool get_pointer) : get_pointer_(get_pointer) {}
 
     void visitProgram(Program *p);
-    void visitTopDef(TopDef *p);
-    void visitClsFld(ClsFld *p);
-    void visitArg(Arg *p);
-    void visitBlock(Block *p);
-    void visitStmt(Stmt *p);
-    void visitItem(Item *p);
-    void visitStdType(StdType *p);
-    void visitType(Type *p);
-    void visitExpr(Expr *p);
-    void visitAddOp(AddOp *p);
-    void visitMulOp(MulOp *p);
-    void visitRelOp(RelOp *p);
     void visitProg(Prog *p);
     void visitFnDef(FnDef *p);
     void visitClsDef(ClsDef *p);

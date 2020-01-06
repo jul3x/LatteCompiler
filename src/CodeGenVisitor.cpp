@@ -10,19 +10,6 @@ void CodeGenVisitor::visitProgram(Program *t)
     t->accept(this);
 }
 
-void CodeGenVisitor::visitTopDef(TopDef *t) {}   //abstract class
-void CodeGenVisitor::visitClsFld(ClsFld *t) {}   //abstract class
-void CodeGenVisitor::visitArg(Arg *t) {}         //abstract class
-void CodeGenVisitor::visitBlock(Block *t) {}     //abstract class
-void CodeGenVisitor::visitStmt(Stmt *t) {}       //abstract class
-void CodeGenVisitor::visitItem(Item *t) {}       //abstract class
-void CodeGenVisitor::visitStdType(StdType *t) {} //abstract class
-void CodeGenVisitor::visitType(Type *t) {}       //abstract class
-void CodeGenVisitor::visitExpr(Expr *t) {}       //abstract class
-void CodeGenVisitor::visitAddOp(AddOp *t) {}     //abstract class
-void CodeGenVisitor::visitMulOp(MulOp *t) {}     //abstract class
-void CodeGenVisitor::visitRelOp(RelOp *t) {}     //abstract class
-
 void CodeGenVisitor::visitProg(Prog *prog)
 {
     prog->listtopdef_->accept(this);
@@ -445,7 +432,7 @@ void CodeGenVisitor::visitEApp(EApp *e_app)
     CompilerOutput::getInstance().printOutput("  call " + e_app->ident_ + "\n");
 
     if (!e_app->listexpr_->empty())
-        CompilerOutput::getInstance().printOutput("  add $" +
+        CompilerOutput::getInstance().printOutput("  addl $" +
                 std::to_string(4 * e_app->listexpr_->size()) + ", \%esp\n");
 
     CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
@@ -657,7 +644,7 @@ void CodeGenVisitor::visitEAdd(EAdd *e_add)
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
         CompilerOutput::getInstance().printOutput("  pushl \%ecx\n");
         CompilerOutput::getInstance().printOutput("  call __Latte._helper_function._addStrings\n");
-        CompilerOutput::getInstance().printOutput("  add $8, \%esp\n");
+        CompilerOutput::getInstance().printOutput("  addl $8, \%esp\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
     }
     else if (e_add->expr_1->type_ == "int" &&
