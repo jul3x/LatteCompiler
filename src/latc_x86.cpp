@@ -129,9 +129,9 @@ int main(int argc, char **argv)
             std::string asm_command =
                 "gcc -c -o " + directory + "/" + program_name + ".o -m32 " + directory + "/" + program_name + ".s";
             std::string linker_command =
-                "gcc -o " + directory + "/" + program_name + " -m32 "
-                + directory + "/" + program_name + ".o " + relative_directory_exec + "/lib/runtime.o";
-
+                "ld -o " + directory + "/" + program_name + " -melf_i386 "
+                + directory + "/" + program_name + ".o " + relative_directory_exec + 
+"/lib/runtime.o lib/{crt*.o,libc.a}";
             std::system(asm_command.c_str());
             std::system(linker_command.c_str());
 
