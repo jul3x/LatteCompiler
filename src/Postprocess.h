@@ -7,8 +7,16 @@
 
 class Postprocess
 {
+    enum class State {
+        None,
+        WasPush,
+        WasPop,
+        WasRet,
+        WasLabel
+    };
+
 public:
-    Postprocess() = default;
+    Postprocess();
 
     void initialize(const std::string &in, const std::string &out);
 
@@ -17,6 +25,9 @@ public:
     void execute();
 
 private:
+    State state_;
+    std::string previous_name_;
+
     std::ifstream in_file_;
     std::ofstream out_file_;
     std::string in_filename_, out_filename_;

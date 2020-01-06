@@ -121,7 +121,7 @@ bool ControlFlow::checkFlow() {
                 std::string error = "Function \"" + function_names_.at(i).first + "\""
                         " (line " + std::to_string(function_names_.at(i).second) + ")"
                         " does not have appropriate termination by return statement"
-                        " in every path in control flow graph!\n";
+                        " in every path in control flow graph!";
                 throw std::invalid_argument(error);
             }
             ++j;

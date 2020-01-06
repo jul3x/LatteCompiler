@@ -737,7 +737,7 @@ void CodeGenVisitor::visitERel(ERel *e_rel)
 
         if (is_eq != nullptr)
         {
-            CompilerOutput::getInstance().printOutput("  jne " + lf + " \n");
+            CompilerOutput::getInstance().printOutput("  jne " + lf + "\n");
         }
         else if (is_neq != nullptr)
         {
