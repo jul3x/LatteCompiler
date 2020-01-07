@@ -31,6 +31,11 @@ int main(int argc, char **argv)
     {
         filename = argv[1];
     }
+    else
+    {
+        usage();
+        exit(1);
+    }
 
     if (filename)
     {
