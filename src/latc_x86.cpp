@@ -18,8 +18,7 @@ void usage()
 {
     printf("usage: Call with one of the following argument combinations:\n");
     printf("\t--help\t\tDisplay this help message.\n");
-    printf("\t(no arguments)	Compile stdin.\n");
-    printf("\t(files)\t\tCompile content of files.\n");
+    printf("\tfile\t\tCompile content of file.\n");
 }
 
 int main(int argc, char **argv)
@@ -37,17 +36,12 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    if (filename)
+    input = fopen(filename, "r");
+    if (!input)
     {
-        input = fopen(filename, "r");
-        if (!input)
-        {
-            usage();
-            exit(1);
-        }
+        usage();
+        exit(1);
     }
-    else
-        input = stdin;
 
     std::string directory, program_name, out_file;
     std::tie(directory, program_name, out_file) = generateOutNames(argv[1], "s");
