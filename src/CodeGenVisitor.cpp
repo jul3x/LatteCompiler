@@ -532,7 +532,7 @@ void CodeGenVisitor::visitEMul(EMul *e_mul)
             CompilerOutput::getInstance().printOutput("  popl \%eax\n");
             CompilerOutput::getInstance().printOutput("  imull $" +
                 std::to_string(e_mul->expr_1->value_) + ", \%eax\n");
-            CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
         }
         else if (!e_mul->expr_1->has_value_ && e_mul->expr_2->has_value_)
         {
@@ -540,7 +540,7 @@ void CodeGenVisitor::visitEMul(EMul *e_mul)
             CompilerOutput::getInstance().printOutput("  popl \%eax\n");
             CompilerOutput::getInstance().printOutput("  imull $" +
                 std::to_string(e_mul->expr_2->value_) + ", \%eax\n");
-            CompilerOutput::getInstance().printOutput("  movl \%eax, (\%esp)\n");
+            CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
         }
         else
         {
