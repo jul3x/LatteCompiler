@@ -264,6 +264,8 @@ public:
     virtual Item *clone() const = 0;
 
     std::string type_;
+    int index_of_var_;
+    std::string function_name_;
 };
 
 class StdType : public Visitable
@@ -292,7 +294,7 @@ public:
     std::string type_;
     bool is_lvalue_;
 
-    bool is_always_true_, is_always_false_;
+    bool is_always_false_, is_always_true_;
 
     bool has_value_;
     int value_;
@@ -651,9 +653,6 @@ class Init : public Item
 public:
     Ident ident_;
     Expr *expr_;
-
-    int index_of_var_;
-    std::string function_name_;
 
     Init(const Init &);
     Init &operator=(const Init &);

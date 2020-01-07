@@ -6,6 +6,6 @@ int main() {
   string z = readString();
 
   printInt(x-5);
-  printString(y+z);  
+  printString(y+z);
   return 0 ;
 }

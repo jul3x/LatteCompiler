@@ -1,11 +1,13 @@
-#ifndef SEMANALYSISVISITOR_HEADER
-#define SEMANALYSISVISITOR_HEADER
+#ifndef CODEGENVISITOR_HEADER
+#define CODEGENVISITOR_HEADER
 
 #include "Absyn.h"
 
-class SemAnalysisVisitor : public Visitor
+class CodeGenVisitor : public Visitor
 {
 public:
+    CodeGenVisitor(bool get_pointer) : get_pointer_(get_pointer) {}
+
     void visitProgram(Program *p);
     void visitProg(Prog *p);
     void visitFnDef(FnDef *p);
@@ -89,6 +91,10 @@ public:
     void visitDouble(Double x);
     void visitString(String x);
     void visitIdent(Ident x);
+
+private:
+    bool get_pointer_;
+
 };
 
 #endif
