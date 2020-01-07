@@ -131,7 +131,8 @@ int main(int argc, char **argv)
             std::string linker_command =
                 "ld -o " + directory + "/" + program_name + " -melf_i386 "
                 + directory + "/" + program_name + ".o " + relative_directory_exec + 
-"/lib/runtime.o lib/{crt*.o,libc.a}";
+	        "/lib/runtime.o " + relative_directory_exec + 
+"/lib/{crt*.o,libc.a}";
             std::system(asm_command.c_str());
             std::system(linker_command.c_str());
 

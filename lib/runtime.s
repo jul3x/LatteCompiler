@@ -2,7 +2,8 @@
 format_string: .string "%s\n"
 format: .string "%d\n"
 error_str: .string "runtime error\n"
-scanf_int: .string "%d"
+scanf_int: .string "%d%*c"
+scanf_str: .string "%255[^\n]%*c"
 
 .text
 .globl printString
@@ -43,104 +44,30 @@ error:
 readString:
 	pushl	%ebp
 	movl	%esp, %ebp
-	pushl	%esi
-	pushl	%ebx
-	subl	$16, %esp
-	call	__x86.get_pc_thunk.bx
-	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
-	movl	%gs:20, %eax
-	movl	%eax, -12(%ebp)
-	xorl	%eax, %eax
-	movl	$120, -20(%ebp)
-	movl	-20(%ebp), %eax
-	subl	$12, %esp
-	pushl	%eax
-	call	malloc@PLT
-	addl	$16, %esp
-	movl	%eax, -16(%ebp)
-	movl	-16(%ebp), %eax
-	testl	%eax, %eax
-	jne	.L2
-	movl	$0, %eax
-	jmp	.L1
-.L2:
-	movl	stdin@GOT(%ebx), %eax
-	movl	(%eax), %eax
-	subl	$4, %esp
-	pushl	%eax
-	leal	-20(%ebp), %eax
-	pushl	%eax
-	leal	-16(%ebp), %eax
-	pushl	%eax
-	call	getline@PLT
-	addl	$16, %esp
-	movl	-16(%ebp), %esi
-	movl	-16(%ebp), %eax
-	subl	$12, %esp
-	pushl	%eax
-	call	strlen@PLT
-	addl	$16, %esp
-	subl	$1, %eax
-	addl	%esi, %eax
-	movzbl	(%eax), %eax
-	cmpb	$10, %al
-	jne	.L4
-	movl	-16(%ebp), %esi
-	movl	-16(%ebp), %eax
-	subl	$12, %esp
-	pushl	%eax
-	call	strlen@PLT
-	addl	$16, %esp
-	subl	$1, %eax
-	addl	%esi, %eax
-	movb	$0, (%eax)
-.L4:
-	movl	-16(%ebp), %eax
-.L1:
-	movl	-12(%ebp), %edx
-	xorl	%gs:20, %edx
-	je	.L6
-	call	__stack_chk_fail_local
-.L6:
-	leal	-8(%ebp), %esp
-	popl	%ebx
-	popl	%esi
-	popl	%ebp
+	subl $8, %esp
+	movl $120, -4(%ebp)
+	pushl -4(%ebp)
+	call malloc
+	movl %eax, -8(%ebp)
+	addl $4, %esp
+	pushl -8(%ebp)
+	pushl $scanf_str
+	call scanf
+	addl $8, %esp
+	movl -8(%ebp), %eax
+	leave
 	ret
 
 readInt:
 	pushl	%ebp
 	movl	%esp, %ebp
-	pushl	%ebx
-	subl	$20, %esp
-	call	__x86.get_pc_thunk.bx
-	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
-	movl	%gs:20, %eax
-	movl	%eax, -12(%ebp)
-	xorl	%eax, %eax
-	subl	$8, %esp
-	leal	-16(%ebp), %eax
-	pushl	%eax
-	pushl   $scanf_int
-	call	__isoc99_scanf@PLT
-	addl	$16, %esp
-	nop
-.L5:
-	movl	stdin@GOT(%ebx), %eax
-	movl	(%eax), %eax
-	subl	$12, %esp
-	pushl	%eax
-	call	fgetc@PLT
-	addl	$16, %esp
-	cmpl	$10, %eax
-	jne	.L5
-	movl	-16(%ebp), %eax
-	movl	-12(%ebp), %edx
-	xorl	%gs:20, %edx
-	je	.L7
-	call	__stack_chk_fail_local
-.L7:
-	movl	-4(%ebp), %ebx
+	subl $4, %esp
+	leal -4(%ebp), %eax
+	pushl %eax
+	pushl $scanf_int
+	call scanf
+	addl $8, %esp
+	movl -4(%ebp), %eax
 	leave
 	ret
 
@@ -150,33 +77,31 @@ __Latte._helper_function._addStrings:
 	pushl	%esi
 	pushl	%ebx
 	subl	$16, %esp
-	call	__x86.get_pc_thunk.bx
-	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
 	subl	$12, %esp
 	pushl	8(%ebp)
-	call	strlen@PLT
+	call	strlen
 	addl	$16, %esp
 	movl	%eax, %esi
 	subl	$12, %esp
 	pushl	12(%ebp)
-	call	strlen@PLT
+	call	strlen
 	addl	$16, %esp
 	addl	%esi, %eax
 	addl	$1, %eax
 	subl	$12, %esp
 	pushl	%eax
-	call	malloc@PLT
+	call	malloc
 	addl	$16, %esp
 	movl	%eax, -12(%ebp)
 	subl	$8, %esp
 	pushl	8(%ebp)
 	pushl	-12(%ebp)
-	call	strcpy@PLT
+	call	strcpy
 	addl	$16, %esp
 	subl	$8, %esp
 	pushl	12(%ebp)
 	pushl	-12(%ebp)
-	call	strcat@PLT
+	call	strcat
 	addl	$16, %esp
 	movl	-12(%ebp), %eax
 	leal	-8(%ebp), %esp
