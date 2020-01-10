@@ -1,0 +1,32 @@
+int main() {
+    boolean[] a;
+    int x = 5, y = 2;
+    a = new boolean[x + y];
+
+    printInt(a.length);
+
+    int i = 0;
+    for (boolean x : a)
+    {
+        if (i % 2 == 0)
+            x = true;
+        else
+            x = false;
+        i++;
+    }
+
+    for (boolean x : a)
+    {
+        if (x)
+            printInt(1);
+        else
+            printInt(0);
+    }
+
+    boolean[] b = new boolean[2];
+
+    a = b;
+
+    printInt(a.length);
+    return 0;
+}

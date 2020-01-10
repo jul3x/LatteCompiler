@@ -347,16 +347,19 @@ void SemAnalysisVisitor::visitWhile(While *while_)
 
 void SemAnalysisVisitor::visitFor(For *for_)
 {
-    throw std::invalid_argument("Unfortunately for loops are not permitted in this version of latc_x86!");
-
     LocalSymbols::getInstance().enterBlock();
 
     for_->type_->accept(this);
     visitIdent(for_->ident_);
 
-    if (for_->type_->get().substr(0, 4) == "void")
+    for_->expr_->accept(this);
+
+    if (for_->type_->get() + "[]" != for_->expr_->type_)
     {
-        std::string error = "Cannot declare variable with void type!";
+        std::string error = "Type of iterator: " +
+            (for_->type_->get().empty() ? "undefined" : for_->type_->get()) +
+            " of for loop does not match type of array: " +
+            (for_->expr_->type_.empty() ? "undefined" : for_->expr_->type_) + "!";
         CompilerOutput::getInstance().error(for_->type_->line_number_, error);
         return;
     }
@@ -364,16 +367,6 @@ void SemAnalysisVisitor::visitFor(For *for_)
     if (!LocalSymbols::getInstance().append(for_->ident_, for_->type_->get()))
     {
         std::string error = "Identifier " + for_->ident_ + " was already declared in this scope!";
-        CompilerOutput::getInstance().error(for_->type_->line_number_, error);
-        return;
-    }
-
-    for_->expr_->accept(this);
-
-    if (for_->type_->get() + "[]" != for_->expr_->type_)
-    {
-        std::string error = "Type of iterator: " + for_->type_->get() +
-            " of for loop does not match type of array: " + for_->expr_->type_ + "!";
         CompilerOutput::getInstance().error(for_->type_->line_number_, error);
         return;
     }
@@ -442,8 +435,10 @@ void SemAnalysisVisitor::visitInit(Init *init)
 
     if (init->expr_->type_ != init->type_)
     {
-        std::string error = "Type of value: " + init->expr_->type_ +
-            " does not match type: " + init->type_ +
+        std::string error = "Type of value: " +
+            (init->expr_->type_.empty() ? "undefined" : init->expr_->type_) +
+            " does not match type: " +
+            (init->type_.empty() ? "undefined" : init->type_) +
             " of declared variable of name " + init->ident_ + "!";
         CompilerOutput::getInstance().error(init->expr_->line_number_, error);
         return;
@@ -504,7 +499,6 @@ void SemAnalysisVisitor::visitStVarType(StVarType *st_var_type)
 
 void SemAnalysisVisitor::visitStArrType(StArrType *st_arr_type)
 {
-    throw std::invalid_argument("Unfortunately array types are not permitted in this version of latc_x86!");
     st_arr_type->stdtype_->accept(this);
 }
 
@@ -562,17 +556,38 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
 {
-    throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    e_cls_var->expr_->accept(this);
+
+    if (e_cls_var->expr_->type_.length() > 2 &&
+        e_cls_var->expr_->type_.substr(e_cls_var->expr_->type_.length() - 2) == "[]")
+    {
+        if (e_cls_var->ident_ != "length")
+        {
+            CompilerOutput::getInstance().error(e_cls_var->line_number_,
+                "Identifier " + e_cls_var->ident_ + " not found!");
+            return;
+        }
+
+        e_cls_var->is_lvalue_ = false;
+        e_cls_var->is_always_false_ = false;
+        e_cls_var->is_always_true_ = false;
+        e_cls_var->has_value_ = false;
+        e_cls_var->type_ = "int";
+    }
+    else
+    {
+        throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    }
 }
 
 void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
 {
-    throw std::invalid_argument("Unfortunately array types are not permitted in this version of latc_x86!");
     e_arr_var->expr_1->accept(this);
     e_arr_var->expr_2->accept(this);
 
     std::string error;
-    if (e_arr_var->expr_1->type_.substr(e_arr_var->expr_1->type_.length() - 2) != "[]")
+    if (e_arr_var->expr_1->type_.length() > 2 &&
+        e_arr_var->expr_1->type_.substr(e_arr_var->expr_1->type_.length() - 2) != "[]")
     {
         error = "[] operation can be performed only for array types!";
     }
@@ -765,12 +780,14 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
 
 void SemAnalysisVisitor::visitEVarNew(EVarNew *e_var_new)
 {
-    throw std::invalid_argument("Unfortunately new operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately new operation is only permitted for arrays "
+                                "of standard types in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
 {
-    throw std::invalid_argument("Unfortunately new operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately new operation is only permitted for arrays "
+                                "of standard types in this version of latc_x86!");
 
     ev_std_new->stdtype_->accept(this);
     ev_std_new->type_ = ev_std_new->stdtype_->get();
@@ -783,13 +800,12 @@ void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
 
 void SemAnalysisVisitor::visitEArrNew(EArrNew *e_arr_new)
 {
-    throw std::invalid_argument("Unfortunately new operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately new operation is only permitted for arrays "
+                                "of standard types in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
 {
-    throw std::invalid_argument("Unfortunately new operation are not permitted in this version of latc_x86!");
-
     ea_std_new->stdtype_->accept(this);
     ea_std_new->expr_->accept(this);
 
@@ -805,27 +821,26 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
     ea_std_new->is_always_false_ = false;
     ea_std_new->is_always_true_ = false;
     ea_std_new->has_value_ = false;
-
 }
 
 void SemAnalysisVisitor::visitEVarCast(EVarCast *e_var_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitEVStdCast(EVStdCast *ev_std_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitEArrCast(EArrCast *e_arr_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitEAStdCast(EAStdCast *ea_std_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operation are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitEMul(EMul *e_mul)
