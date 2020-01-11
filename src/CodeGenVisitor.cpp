@@ -256,16 +256,23 @@ void CodeGenVisitor::visitFor(For *for_)
     for_->expr_->accept(this);
 
     CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
+    CompilerOutput::getInstance().printOutput("  movl \%ebx, " +
+        std::to_string(FunctionFrame::getInstance().getPointer(
+                for_->function_name_, for_->ident_, for_->index_of_var_)) +
+                "(\%ebp)\n");
     CompilerOutput::getInstance().printOutput("  movl (\%ebx), \%ebx\n"); // length of array
     CompilerOutput::getInstance().printOutput("  jmp " + for_cond + "\n");
 
     CompilerOutput::getInstance().printOutput(for_body + ":\n");
 
     for_->stmt_->accept(this);
-    CompilerOutput::getInstance().printOutput("  pushl \%ebx\n  call printInt\n  popl  \%ebx\n");
 
     CompilerOutput::getInstance().printOutput("  decl \%ebx\n"); // --length
     CompilerOutput::getInstance().printOutput(for_cond + ":\n");
+    CompilerOutput::getInstance().printOutput("  addl $4, " +
+        std::to_string(FunctionFrame::getInstance().getPointer(
+                for_->function_name_, for_->ident_, for_->index_of_var_)) +
+                "(\%ebp)\n"); // ++ptr
     CompilerOutput::getInstance().printOutput("  test \%ebx, \%ebx\n");
     CompilerOutput::getInstance().printOutput("  jnz " + for_body + "\n");
 
@@ -374,17 +381,26 @@ void CodeGenVisitor::visitEVar(EVar *e_var)
 {
     visitIdent(e_var->ident_);
 
-    if (!this->get_pointer_)
+    if ((!this->get_pointer_ && !e_var->is_reference_) || (this->get_pointer_ && e_var->is_reference_))
+    {
         CompilerOutput::getInstance().printOutput("  pushl " + std::to_string(
             FunctionFrame::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
             "(\%ebp)\n");
-    else
+    }
+    else if (this->get_pointer_ && !e_var->is_reference_)
     {
         CompilerOutput::getInstance().printOutput("  leal " +
         std::to_string(FunctionFrame::getInstance().getPointer(
                 e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
                 "(\%ebp), \%eax\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
+    }
+    else if (!this->get_pointer_ && e_var->is_reference_)
+    {
+        CompilerOutput::getInstance().printOutput("  movl " + std::to_string(
+            FunctionFrame::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
+            "(\%ebp), \%eax\n");
+        CompilerOutput::getInstance().printOutput("  pushl (\%eax)\n");
     }
 }
 

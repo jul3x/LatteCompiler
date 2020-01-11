@@ -7,8 +7,9 @@ LocalSymbols& LocalSymbols::getInstance() {
 }
 
 bool LocalSymbols::append(const std::string &ident,
-                          const std::string &type) {
-    if (checkExistance(symbols_.back(), ident).first.empty())
+                          const std::string &type,
+                          bool is_reference) {
+    if (std::get<0>(checkExistance(symbols_.back(), ident)).empty())
     {
         auto it = count_of_decl_.find(ident);
         int index = 0;
@@ -23,7 +24,7 @@ bool LocalSymbols::append(const std::string &ident,
             index = 1;
         }
 
-        symbols_.back().emplace(std::make_pair(ident, std::make_pair(type, index)));
+        symbols_.back().emplace(std::make_pair(ident, std::make_tuple(type, index, is_reference)));
 
         return true;
     }
@@ -51,9 +52,9 @@ const std::string& LocalSymbols::getSymbolType(const std::string &ident) const {
     {
         auto& symbol = checkExistance(*it, ident);
 
-        if (!symbol.first.empty())
+        if (!std::get<0>(symbol).empty())
         {
-            return symbol.first;
+            return std::get<0>(symbol);
         }
     }
 
@@ -66,9 +67,9 @@ int LocalSymbols::getSymbolIndex(const std::string &ident) const {
     {
         auto& symbol = checkExistance(*it, ident);
 
-        if (!symbol.first.empty())
+        if (!std::get<0>(symbol).empty())
         {
-            return symbol.second;
+            return std::get<1>(symbol);
         }
     }
 
@@ -76,9 +77,24 @@ int LocalSymbols::getSymbolIndex(const std::string &ident) const {
     throw std::invalid_argument(error.c_str());
 }
 
-const std::pair<std::string, int>& LocalSymbols::checkExistance(const SymbolTable &table,
-                                                                const std::string &ident) const {
-    static std::pair<std::string, int> NOT_FOUND = std::make_pair("", 0);
+bool LocalSymbols::isSymbolReference(const std::string &ident) const {
+    for (auto it = symbols_.rbegin(); it != symbols_.rend(); ++it)
+    {
+        auto& symbol = checkExistance(*it, ident);
+
+        if (!std::get<0>(symbol).empty())
+        {
+            return std::get<2>(symbol);
+        }
+    }
+
+    std::string error = "Identifier " + ident + " not found!";
+    throw std::invalid_argument(error.c_str());
+}
+
+const std::tuple<std::string, int, bool>& LocalSymbols::checkExistance(const SymbolTable &table,
+                                                                       const std::string &ident) const {
+    static std::tuple<std::string, int, bool> NOT_FOUND = std::make_tuple("", 0, false);
 
     auto it = table.find(ident);
 

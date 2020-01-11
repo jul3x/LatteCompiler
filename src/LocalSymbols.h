@@ -11,13 +11,14 @@
 
 class LocalSymbols
 {
-    using SymbolTable = std::unordered_map<std::string, std::pair<std::string, int>>;
+    using SymbolTable = std::unordered_map<std::string, std::tuple<std::string, int, bool>>;
 
 public:
     static LocalSymbols& getInstance();
 
     bool append(const std::string &ident,
-                const std::string &type);
+                const std::string &type,
+                bool is_reference = false);
 
     void reset();
 
@@ -29,11 +30,13 @@ public:
 
     int getSymbolIndex(const std::string &ident) const;
 
+    bool isSymbolReference(const std::string &ident) const;
+
 private:
     LocalSymbols() = default;
 
-    const std::pair<std::string, int>& checkExistance(const SymbolTable &table,
-                                                      const std::string &ident) const;
+    const std::tuple<std::string, int, bool>& checkExistance(const SymbolTable &table,
+                                                             const std::string &ident) const;
 
     std::vector<SymbolTable> symbols_;
     std::unordered_map<std::string, int> count_of_decl_;

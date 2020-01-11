@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
             FunctionFrame::getInstance().generatePointers();
-            FunctionFrame::getInstance().printPointers();
+            //FunctionFrame::getInstance().printPointers();
 
             CompilerOutput::getInstance().initializeOutputFile(out_file + ".bak");
 

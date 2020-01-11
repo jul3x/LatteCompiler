@@ -364,7 +364,7 @@ void SemAnalysisVisitor::visitFor(For *for_)
         return;
     }
 
-    if (!LocalSymbols::getInstance().append(for_->ident_, for_->type_->get()))
+    if (!LocalSymbols::getInstance().append(for_->ident_, for_->type_->get(), true))
     {
         std::string error = "Identifier " + for_->ident_ + " was already declared in this scope!";
         CompilerOutput::getInstance().error(for_->type_->line_number_, error);
@@ -545,9 +545,15 @@ void SemAnalysisVisitor::visitFun(Fun *fun)
 
 void SemAnalysisVisitor::visitEVar(EVar *e_var)
 {
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    int index_of_var;
+    bool is_reference;
+
     try
     {
         e_var->type_ = LocalSymbols::getInstance().getSymbolType(e_var->ident_);
+        index_of_var = LocalSymbols::getInstance().getSymbolIndex(e_var->ident_);
+        is_reference = LocalSymbols::getInstance().isSymbolReference(e_var->ident_);
     }
     catch(const std::invalid_argument& e)
     {
@@ -561,21 +567,10 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
     e_var->is_always_true_ = false;
     e_var->has_value_ = false;
 
-    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
-    int index_of_var;
-
-    try
-    {
-        index_of_var = LocalSymbols::getInstance().getSymbolIndex(e_var->ident_);
-    }
-    catch(const std::invalid_argument& e)
-    {
-        CompilerOutput::getInstance().error(e_var->line_number_, e.what());
-        return;
-    }
-
     e_var->index_of_var_ = index_of_var;
     e_var->function_name_ = function_name;
+    e_var->is_reference_ = is_reference;
+
 }
 
 void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)

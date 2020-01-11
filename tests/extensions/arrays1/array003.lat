@@ -26,11 +26,11 @@ int main() {
     boolean[] b = new boolean[2];
 
     a = b;
-/*
+
     a[0] = false;
     if (a[0] != true)
         printString("false");
-*/
+
     printInt(a.length);
     return 0;
 }
