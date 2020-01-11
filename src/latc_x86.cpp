@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     input = fopen(filename, "r");
     if (!input)
     {
-        usage();
+        fprintf(stderr, "Cannot open input file!\n");
         exit(1);
     }
 

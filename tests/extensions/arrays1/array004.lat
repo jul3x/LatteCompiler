@@ -1,0 +1,20 @@
+int main () {
+    int[] a = new int [10];
+
+    int i = 1;
+    for (int x : a)
+    {
+        x = i;
+        i++;
+    }
+
+    for (int y : a)
+    {
+        for (int z : a)
+        {
+            printInt(y * z);
+        }
+    }
+
+    return 0;
+}
