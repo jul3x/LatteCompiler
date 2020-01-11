@@ -88,6 +88,7 @@ int main(int argc, char **argv)
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
             FunctionFrame::getInstance().generatePointers();
+            //FunctionFrame::getInstance().printPointers();
 
             CompilerOutput::getInstance().initializeOutputFile(out_file + ".bak");
 
@@ -130,8 +131,7 @@ int main(int argc, char **argv)
             std::string linker_command =
                 "ld -o " + directory + "/" + program_name + " -melf_i386 "
                 + directory + "/" + program_name + ".o " + relative_directory_exec + 
-	        "/lib/runtime.o " + relative_directory_exec + 
-"/lib/{crt*.o,libc.a}";
+	        "/lib/runtime.o " + relative_directory_exec + "/lib/crti.o lib/libc.a lib/crt1.o lib/crtn.o";
             std::system(asm_command.c_str());
             std::system(linker_command.c_str());
 
