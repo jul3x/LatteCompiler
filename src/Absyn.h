@@ -611,6 +611,9 @@ public:
     Expr *expr_;
     Stmt *stmt_;
 
+    std::string function_name_;
+    int index_of_var_;
+
     For(const For &);
     For &operator=(const For &);
     For(Type *p1, Ident p2, Expr *p3, Stmt *p4);

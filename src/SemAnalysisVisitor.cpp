@@ -371,6 +371,30 @@ void SemAnalysisVisitor::visitFor(For *for_)
         return;
     }
 
+    auto function_name = ControlFlow::getInstance().getCurrentFunctionName();
+    int index_of_var;
+
+    try
+    {
+        index_of_var = LocalSymbols::getInstance().getSymbolIndex(for_->ident_);
+    }
+    catch(const std::invalid_argument& e)
+    {
+        CompilerOutput::getInstance().error(for_->line_number_, e.what());
+        return;
+    }
+
+    if (!GlobalSymbols::getInstance().appendLocals(function_name, for_->ident_,
+                                                   for_->type_->get(), index_of_var))
+    {
+        CompilerOutput::getInstance().error(for_->line_number_,
+            "Identifier " + function_name + " does not exists as a function name!");
+        return;
+    }
+
+    for_->index_of_var_ = index_of_var;
+    for_->function_name_ = function_name;
+
     for_->stmt_->accept(this);
 
     LocalSymbols::getInstance().exitBlock();
