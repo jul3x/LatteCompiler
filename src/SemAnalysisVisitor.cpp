@@ -41,22 +41,47 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 
 void SemAnalysisVisitor::visitClsDef(ClsDef *cls_def)
 {
-    throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    ControlFlow::getInstance().newClass(cls_def->ident_);
+
+    cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
-    throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately inherited classes are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitVarDef(VarDef *var_def)
 {
-    throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    if (!GlobalSymbols::getInstance().checkType(var_def->type_->get()))
+    {
+        CompilerOutput::getInstance().error(var_def->type_->line_number_,
+            var_def->type_->get() + " is not a valid type name!");
+        return;
+    }
+
+    if (var_def->type_->get().substr(0, 4) == "void")
+    {
+        CompilerOutput::getInstance().error(var_def->type_->line_number_,
+            "Cannot declare variable with void type!");
+        return;
+    }
+
+    auto class_name = ControlFlow::getInstance().getCurrentClassName();
+
+    for (const auto &ident : *(var_def->listident_))
+    {
+        if (!GlobalSymbols::getInstance().appendClassVars(class_name, ident, var_def->type_->get()))
+        {
+            std::string error = "Identifier " + ident + " was already declared in this scope!";
+            CompilerOutput::getInstance().error(var_def->line_number_, error);
+        }
+    }
 }
 
 void SemAnalysisVisitor::visitMetDef(MetDef *met_def)
 {
-    throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately methods in classes are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitAr(Ar *ar)
@@ -92,7 +117,7 @@ void SemAnalysisVisitor::visitAr(Ar *ar)
     {
         index_of_var = LocalSymbols::getInstance().getSymbolIndex(ar->ident_);
     }
-    catch(const std::invalid_argument& e)
+    catch (const std::invalid_argument& e)
     {
         CompilerOutput::getInstance().error(ar->line_number_, e.what());
         return;
@@ -533,7 +558,6 @@ void SemAnalysisVisitor::visitVarType(VarType *var_type)
 
 void SemAnalysisVisitor::visitArrType(ArrType *arr_type)
 {
-    throw std::invalid_argument("Unfortunately array types are not permitted in this version of latc_x86!");
     visitIdent(arr_type->ident_);
 }
 
@@ -566,6 +590,7 @@ void SemAnalysisVisitor::visitEVar(EVar *e_var)
     e_var->is_always_false_ = false;
     e_var->is_always_true_ = false;
     e_var->has_value_ = false;
+    e_var->is_null_ = false;
 
     e_var->index_of_var_ = index_of_var;
     e_var->function_name_ = function_name;
@@ -587,6 +612,7 @@ void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
             return;
         }
 
+        e_cls_var->is_null_ = false;
         e_cls_var->is_lvalue_ = false;
         e_cls_var->is_always_false_ = false;
         e_cls_var->is_always_true_ = false;
@@ -595,7 +621,22 @@ void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
     }
     else
     {
-        throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+        try
+        {
+            e_cls_var->type_ =
+                GlobalSymbols::getInstance().getVarInClassType(e_cls_var->expr_->type_, e_cls_var->ident_);
+        }
+        catch(const std::invalid_argument& e)
+        {
+            CompilerOutput::getInstance().error(e_cls_var->line_number_, e.what());
+            return;
+        }
+
+        e_cls_var->is_null_ = false;
+        e_cls_var->is_lvalue_ = true;
+        e_cls_var->is_always_false_ = false;
+        e_cls_var->is_always_true_ = false;
+        e_cls_var->has_value_ = false;
     }
 }
 
@@ -632,6 +673,7 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
     e_arr_var->is_always_false_ = false;
     e_arr_var->is_always_true_ = false;
     e_arr_var->has_value_ = false;
+    e_arr_var->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
@@ -643,6 +685,7 @@ void SemAnalysisVisitor::visitELitInt(ELitInt *e_lit_int)
     e_lit_int->is_always_false_ = false;
     e_lit_int->is_always_true_ = false;
     e_lit_int->has_value_ = true;
+    e_lit_int->is_null_ = false;
 
     e_lit_int->value_ = e_lit_int->integer_;
 }
@@ -656,6 +699,7 @@ void SemAnalysisVisitor::visitEString(EString *e_string)
     e_string->is_always_false_ = false;
     e_string->is_always_true_ = false;
     e_string->has_value_ = false;
+    e_string->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
@@ -665,6 +709,7 @@ void SemAnalysisVisitor::visitELitTrue(ELitTrue *e_lit_true)
     e_lit_true->is_always_false_ = false;
     e_lit_true->is_always_true_ = true;
     e_lit_true->has_value_ = false;
+    e_lit_true->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
@@ -674,6 +719,7 @@ void SemAnalysisVisitor::visitELitFalse(ELitFalse *e_lit_false)
     e_lit_false->is_always_false_ = true;
     e_lit_false->is_always_true_ = false;
     e_lit_false->has_value_ = false;
+    e_lit_false->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
@@ -683,6 +729,7 @@ void SemAnalysisVisitor::visitELitNull(ELitNull *e_lit_null)
     e_lit_null->is_always_false_ = false;
     e_lit_null->is_always_true_ = false;
     e_lit_null->has_value_ = false;
+    e_lit_null->is_null_ = true;
 }
 
 void SemAnalysisVisitor::visitEApp(EApp *e_app)
@@ -719,7 +766,8 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
         {
             std::string error = e_app->ident_ + " function's " + std::to_string(i + 1) + 
                 " argument needs to be of type: " + args->at(i)->getType() +
-                ", provided: " + e_app->listexpr_->at(i)->type_ + "!";
+                ", provided: " + (e_app->listexpr_->at(i)->type_ == "" ? "undefined" : e_app->listexpr_->at(i)->type_)
+                + "!";
             CompilerOutput::getInstance().error(e_app->listexpr_->at(i)->line_number_, error);
 
             return;
@@ -731,6 +779,7 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
     e_app->is_always_false_ = false;
     e_app->is_always_true_ = false;
     e_app->has_value_ = false;
+    e_app->is_null_ = false;
 
     if (e_app->ident_ == "error")
     {
@@ -741,7 +790,7 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
 {
-    throw std::invalid_argument("Unfortunately classes are not permitted in this version of latc_x86!");
+    throw std::invalid_argument("Unfortunately methods are not permitted in this version of latc_x86!");
 }
 
 void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
@@ -761,6 +810,7 @@ void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
     e_neg->is_always_true_ = false;
     e_neg->has_value_ = e_neg->expr_->has_value_;
     e_neg->value_ = -e_neg->expr_->value_;
+    e_neg->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitENot(ENot *e_not)
@@ -795,32 +845,64 @@ void SemAnalysisVisitor::visitENot(ENot *e_not)
     }
 
     e_not->has_value_ = false;
+    e_not->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarNew(EVarNew *e_var_new)
 {
-    throw std::invalid_argument("Unfortunately new operation is only permitted for arrays "
-                                "of standard types in this version of latc_x86!");
+    if (!GlobalSymbols::getInstance().checkType(e_var_new->ident_))
+    {
+        CompilerOutput::getInstance().error(e_var_new->line_number_,
+            e_var_new->ident_ + " is not a valid type name!");
+        return;
+    }
+
+    e_var_new->type_ = e_var_new->ident_;
+    e_var_new->is_lvalue_ = false;
+    e_var_new->is_always_false_ = false;
+    e_var_new->is_always_true_ = false;
+    e_var_new->has_value_ = false;
+    e_var_new->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEVStdNew(EVStdNew *ev_std_new)
 {
-    throw std::invalid_argument("Unfortunately new operation is only permitted for arrays "
-                                "of standard types in this version of latc_x86!");
+    CompilerOutput::getInstance().error(ev_std_new->line_number_,
+            "New operation is only permitted for arrays and structs!");
 
-    ev_std_new->stdtype_->accept(this);
     ev_std_new->type_ = ev_std_new->stdtype_->get();
 
     ev_std_new->is_lvalue_ = false;
     ev_std_new->is_always_false_ = false;
     ev_std_new->is_always_true_ = false;
     ev_std_new->has_value_ = false;
+    ev_std_new->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEArrNew(EArrNew *e_arr_new)
 {
-    throw std::invalid_argument("Unfortunately new operation is only permitted for arrays "
-                                "of standard types in this version of latc_x86!");
+    e_arr_new->expr_->accept(this);
+
+    if (e_arr_new->expr_->type_ != "int")
+    {
+        std::string error = "New operation for arrays can be performed only using int parameter!";
+        CompilerOutput::getInstance().error(e_arr_new->expr_->line_number_, error);
+        return;
+    }
+
+    if (!GlobalSymbols::getInstance().checkType(e_arr_new->ident_))
+    {
+        CompilerOutput::getInstance().error(e_arr_new->line_number_,
+            e_arr_new->ident_ + " is not a valid type name!");
+        return;
+    }
+
+    e_arr_new->type_ = e_arr_new->ident_ + "[]";
+    e_arr_new->is_lvalue_ = false;
+    e_arr_new->is_always_false_ = false;
+    e_arr_new->is_always_true_ = false;
+    e_arr_new->has_value_ = false;
+    e_arr_new->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
@@ -840,26 +922,50 @@ void SemAnalysisVisitor::visitEAStdNew(EAStdNew *ea_std_new)
     ea_std_new->is_always_false_ = false;
     ea_std_new->is_always_true_ = false;
     ea_std_new->has_value_ = false;
+    ea_std_new->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEVarCast(EVarCast *e_var_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
+    if (!GlobalSymbols::getInstance().checkType(e_var_cast->ident_))
+    {
+        CompilerOutput::getInstance().error(e_var_cast->line_number_,
+            e_var_cast->ident_ + " is not a valid type name!");
+        return;
+    }
+
+    e_var_cast->expr_->accept(this);
+
+    if (!e_var_cast->expr_->is_null_)
+    {
+        CompilerOutput::getInstance().error(e_var_cast->line_number_,
+            "Cast cannot be performed for not null values");
+    }
+
+    e_var_cast->type_ = e_var_cast->ident_;
+    e_var_cast->is_lvalue_ = false;
+    e_var_cast->is_always_false_ = false;
+    e_var_cast->is_always_true_ = false;
+    e_var_cast->has_value_ = false;
+    e_var_cast->is_null_ = true;
 }
 
 void SemAnalysisVisitor::visitEVStdCast(EVStdCast *ev_std_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
+    std::string error = "Cast operation can be only performed for class types!";
+    CompilerOutput::getInstance().error(ev_std_cast->line_number_, error);
 }
 
 void SemAnalysisVisitor::visitEArrCast(EArrCast *e_arr_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
+    std::string error = "Cast operation can be only performed for class types!";
+    CompilerOutput::getInstance().error(e_arr_cast->line_number_, error);
 }
 
 void SemAnalysisVisitor::visitEAStdCast(EAStdCast *ea_std_cast)
 {
-    throw std::invalid_argument("Unfortunately cast operations are not permitted in this version of latc_x86!");
+    std::string error = "Cast operation can be only performed for class types!";
+    CompilerOutput::getInstance().error(ea_std_cast->line_number_, error);
 }
 
 void SemAnalysisVisitor::visitEMul(EMul *e_mul)
@@ -881,6 +987,7 @@ void SemAnalysisVisitor::visitEMul(EMul *e_mul)
     e_mul->is_lvalue_ = false;
     e_mul->is_always_false_ = false;
     e_mul->is_always_true_ = false;
+    e_mul->is_null_ = false;
 
     auto is_mul = dynamic_cast<Times*>(e_mul->mulop_);
     auto is_div = dynamic_cast<Div*>(e_mul->mulop_);
@@ -942,6 +1049,7 @@ void SemAnalysisVisitor::visitEAdd(EAdd *e_add)
     e_add->is_lvalue_ = false;
     e_add->is_always_false_ = false;
     e_add->is_always_true_ = false;
+    e_add->is_null_ = false;
 
     e_add->has_value_ = e_add->expr_1->has_value_ && e_add->expr_2->has_value_;
 
@@ -972,6 +1080,12 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
 
     if (is_eq != nullptr || is_neq != nullptr)
     {
+        if (e_rel->expr_1->type_ == e_rel->expr_2->type_ &&
+            (e_rel->expr_1->is_null_ || e_rel->expr_2->is_null_))
+        {
+            is_ok = true;
+        }
+
         if (e_rel->expr_1->type_ == "int" &&
             e_rel->expr_2->type_ == "int")
         {
@@ -1049,7 +1163,7 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
         if (!is_ok)
         {
             std::string error = "Relation operation can be performed only using"
-                                " two int or two boolean parameters!";
+                                " two ints, two booleans or for checking if class is null!";
             CompilerOutput::getInstance().error(e_rel->expr_1->line_number_, error);
             return;
         }
@@ -1127,6 +1241,7 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
     e_rel->type_ = "boolean";
     e_rel->is_lvalue_ = false;
     e_rel->has_value_ = false;
+    e_rel->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
@@ -1163,6 +1278,7 @@ void SemAnalysisVisitor::visitEAnd(EAnd *e_and)
     }
 
     e_and->has_value_ = false;
+    e_and->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitEOr(EOr *e_or)
@@ -1199,6 +1315,7 @@ void SemAnalysisVisitor::visitEOr(EOr *e_or)
     }
 
     e_or->has_value_ = false;
+    e_or->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitPlus(Plus *plus)

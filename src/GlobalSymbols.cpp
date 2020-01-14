@@ -55,7 +55,7 @@ bool GlobalSymbols::appendClass(const std::string &ident,
                                 const std::string &parent) {
     if (!checkExistance(ident))
     {
-        classes_.emplace(std::make_pair(ident, parent));
+        classes_.emplace(std::make_pair(ident, std::make_tuple(parent, ClassVars{})));
 
         return true;
     }
@@ -83,6 +83,25 @@ bool GlobalSymbols::appendLocals(const std::string &fn_ident, const std::string 
     if (function != functions_.end())
     {
         std::get<2>(function->second).push_back({loc_ident, type, index, false});
+        return true;
+    }
+
+    return false;
+}
+
+bool GlobalSymbols::appendClassVars(const std::string &cls_ident, const std::string &var_ident,
+                                    const std::string &type) {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        auto cls_var = std::get<1>(cls->second).find(var_ident);
+        if (cls_var != std::get<1>(cls->second).end())
+        {
+            return false;
+        }
+
+        std::get<1>(cls->second).emplace(std::make_pair(var_ident, type));
         return true;
     }
 
@@ -125,6 +144,14 @@ bool GlobalSymbols::checkType(const std::string &type) const {
         type != "int" && type != "void" && type != "boolean" && type != "string" &&
         type != "int[]" && type != "boolean[]" && type != "string[]")
     {
+        if (type.length() > 2 && type.substr(type.length() - 2) == "[]")
+        {
+            auto class_it_2 = classes_.find(type.substr(0, type.length() - 2));
+
+            if (class_it_2 != classes_.end())
+                return true;
+        }
+
         return false;
     }
 
@@ -155,6 +182,24 @@ ListArg* GlobalSymbols::getFunctionArgs(const std::string &ident) const {
     {
         throw std::invalid_argument("");
     }
+}
+
+const std::string& GlobalSymbols::getVarInClassType(const std::string &cls_ident, const std::string &ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        auto cls_var = std::get<1>(cls->second).find(ident);
+
+        if (cls_var != std::get<1>(cls->second).end())
+        {
+            return cls_var->second;
+        }
+
+        throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
+    }
+
+    throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
 }
 
 void GlobalSymbols::prettyPrint() const {
@@ -243,15 +288,15 @@ inline bool GlobalSymbols::checkInheritanceCorrectness() const {
 
     for (auto it = classes_.begin(); it != classes_.end(); ++it)
     {
-        auto parent_it = cls_index.find(it->second);
+        auto parent_it = cls_index.find(std::get<0>(it->second));
         if (parent_it != cls_index.end())
         {
             inheritance.at(cls_index.find(it->first)->second) =
-                it->second == "" ? -1 : parent_it->second;
+                std::get<0>(it->second) == "" ? -1 : parent_it->second;
         }
-        else if (it->second != "")
+        else if (std::get<0>(it->second) != "")
         {
-            std::string error = "Parent class \"" + it->second + "\" of class \"" +
+            std::string error = "Parent class \"" + std::get<0>(it->second) + "\" of class \"" +
                 it->first + "\" does not exists!!";
             throw std::invalid_argument(error.c_str());
         }
