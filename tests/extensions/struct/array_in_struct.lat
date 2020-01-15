@@ -1,0 +1,46 @@
+class Struct {
+    int[] a;
+}
+
+int main () {
+    Struct[] a = new Struct[5];
+
+    int i = 0;
+
+    for (Struct x : a)
+    {
+        x.a = new int[5];
+
+        for (int y : x.a)
+        {
+            y = 10 + i;
+
+            i++;
+        }
+    }
+
+    Struct[] b = a;
+
+    for (Struct x : b)
+    {
+        for (int y : x.a)
+        {
+            printInt(y);
+        }
+    }
+
+    int j = 0, k = 0;
+    printString("==");
+    while (j < b.length)
+    {
+        k = 0;
+        while (k < b[j].a.length)
+        {
+            printInt(b[j].a[k]);
+            k++;
+        }
+        j++;
+    }
+
+    return 0;
+}
