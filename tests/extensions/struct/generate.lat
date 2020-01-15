@@ -1,0 +1,35 @@
+class A
+{
+    int a, b;
+}
+
+A[] generate(int n) {
+    A[] a = new A[n];
+
+    int i = 0;
+    while (i < a.length)
+    {
+        a[i].a = i;
+        a[i].b = i + 1;
+        i++;
+    }
+
+    return a;
+}
+
+int main ()
+{
+    A[] a = generate(10);
+
+    for (A x : a)
+    {
+        printInt(x.a);
+    }
+
+    for (A x : generate(5))
+    {
+        printInt(x.b);
+    }
+
+    return 0;
+}

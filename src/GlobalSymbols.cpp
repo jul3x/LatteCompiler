@@ -131,7 +131,7 @@ const GlobalSymbols::ClassVars& GlobalSymbols::getClassVars(const std::string &c
 }
 
 void GlobalSymbols::appendString(const std::string &str) {
-    std::string label = "loc_str_val_" + std::to_string(strings_.size());
+    std::string label = "loc_str_val$" + std::to_string(strings_.size());
 
     strings_.insert(std::make_pair(str, label));
 }

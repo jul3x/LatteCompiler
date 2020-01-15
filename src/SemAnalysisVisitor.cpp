@@ -174,8 +174,10 @@ void SemAnalysisVisitor::visitAss(Ass *ass)
 
     if (ass->expr_1->type_ != ass->expr_2->type_)
     {
-        std::string error = "Lvalue of type: " + ass->expr_1->type_ +
-            " does not match rvalue of type: " + ass->expr_2->type_ + "!";
+        std::string error = "Lvalue of type: " +
+            (ass->expr_1->type_.empty() ? "undefined" : ass->expr_1->type_) +
+            " does not match rvalue of type: " +
+            (ass->expr_2->type_.empty() ? "undefined" : ass->expr_2->type_) + "!";
         CompilerOutput::getInstance().error(ass->expr_1->line_number_, error);
         return;
     }
@@ -238,7 +240,8 @@ void SemAnalysisVisitor::visitRet(Ret *ret)
 
     if (!ControlFlow::getInstance().setTermination(ret->expr_->type_))
     {
-        std::string error = "Return type " + ret->expr_->type_ +
+        std::string error = "Return type " +
+                (ret->expr_->type_.empty() ? "undefined" : ret->expr_->type_) +
                 " does not match declared function \"" +
                 ControlFlow::getInstance().getCurrentFunctionName() + "\" return type: " +
                 ControlFlow::getInstance().getCurrentFunctionType() + "!";
@@ -633,7 +636,7 @@ void SemAnalysisVisitor::visitEClsVar(EClsVar *e_cls_var)
         }
 
         e_cls_var->is_null_ = false;
-        e_cls_var->is_lvalue_ = true;
+        e_cls_var->is_lvalue_ = e_cls_var->expr_->is_lvalue_;
         e_cls_var->is_always_false_ = false;
         e_cls_var->is_always_true_ = false;
         e_cls_var->has_value_ = false;
@@ -652,11 +655,6 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
         error = "[] operation can be performed only for array types!";
     }
 
-    if (!e_arr_var->expr_1->is_lvalue_)
-    {
-        error = "[] operation can be performed only on lvalue array types!";
-    }
-
     if (e_arr_var->expr_2->type_ != "int")
     {
         error = "[] operation can be performed only using int parameter!";
@@ -669,7 +667,7 @@ void SemAnalysisVisitor::visitEArrVar(EArrVar *e_arr_var)
     }
 
     e_arr_var->type_ = e_arr_var->expr_1->type_.substr(0, e_arr_var->expr_1->type_.length() - 2);
-    e_arr_var->is_lvalue_ = true;
+    e_arr_var->is_lvalue_ = e_arr_var->expr_1->is_lvalue_;
     e_arr_var->is_always_false_ = false;
     e_arr_var->is_always_true_ = false;
     e_arr_var->has_value_ = false;
