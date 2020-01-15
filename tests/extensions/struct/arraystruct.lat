@@ -1,6 +1,6 @@
 class A
 {
-    int a, b;
+    int a;
 }
 
 int main () {
@@ -9,16 +9,19 @@ int main () {
     for (A b : a)
     {
         b.a = 10;
-        b.b = 11;
+       // b.b = 11;
     }
-
+/*
     for (A b : a)
     {
         printInt(b.a);
         printInt(b.b);
-    }
+    }*/
 
-    printInt(a[0].a);
+    //printInt(a[0].a);
+
+    //a[0].a = 5;
+    //printInt(a[0].a);
 
     return 0;
 }
