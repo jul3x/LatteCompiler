@@ -9,7 +9,7 @@
 #include "GlobalSymbols.h"
 #include "ControlFlow.h"
 #include "CompilerOutput.h"
-#include "FunctionFrame.h"
+#include "MemoryFrames.h"
 #include "Utils.h"
 #include "Postprocess.h"
 
@@ -87,8 +87,10 @@ int main(int argc, char **argv)
 
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
-            FunctionFrame::getInstance().generatePointers();
-            //FunctionFrame::getInstance().printPointers();
+            MemoryFrames::getInstance().generatePointers();
+            //MemoryFrames::getInstance().printPointers();
+            MemoryFrames::getInstance().generateClassOffsets();
+            MemoryFrames::getInstance().printClasses();
 
             CompilerOutput::getInstance().initializeOutputFile(out_file + ".bak");
 

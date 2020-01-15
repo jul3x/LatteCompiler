@@ -2,6 +2,13 @@ class Struct {
     int[] a;
 }
 
+class Struct2 {
+    int[] a;
+    Struct b;
+    Struct2 c;
+    string s;
+}
+
 int main () {
     Struct[] a = new Struct[5];
 

@@ -9,7 +9,7 @@ BISON_OPTS=-t -pLatte
 
 OBJS=Absyn.o Lexer.o Parser.o \
 	 SemAnalysisVisitor.o GlobalSymbolsCollector.o CodeGenVisitor.o \
-	 CompilerOutput.o ControlFlow.o FunctionFrame.o GlobalSymbols.o \
+	 CompilerOutput.o ControlFlow.o MemoryFrames.o GlobalSymbols.o \
 	 LabelGenerator.o LocalSymbols.o Postprocess.o
 .PHONY: clean distclean
 
@@ -53,8 +53,8 @@ CompilerOutput.o: src/CompilerOutput.cpp src/CompilerOutput.h
 ControlFlow.o: src/ControlFlow.cpp src/ControlFlow.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/ControlFlow.cpp
 
-FunctionFrame.o: src/FunctionFrame.cpp src/FunctionFrame.h
-	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/FunctionFrame.cpp
+MemoryFrames.o: src/MemoryFrames.cpp src/MemoryFrames.h
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/MemoryFrames.cpp
 
 GlobalSymbols.o: src/GlobalSymbols.cpp src/GlobalSymbols.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/GlobalSymbols.cpp
@@ -72,5 +72,5 @@ latc_x86.o: src/latc_x86.cpp src/Parser.h src/Absyn.h \
 	src/SemAnalysisVisitor.h src/CodeGenVisitor.h \
 	src/GlobalSymbolsCollector.h src/GlobalSymbols.h \
 	src/ControlFlow.h src/CompilerOutput.h \
-	src/FunctionFrame.h src/Utils.h src/Postprocess.h
+	src/MemoryFrames.h src/Utils.h src/Postprocess.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/latc_x86.cpp

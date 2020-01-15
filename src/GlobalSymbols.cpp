@@ -119,6 +119,17 @@ const GlobalSymbols::Locals& GlobalSymbols::getFunctionLocals(const std::string 
     throw std::invalid_argument("Function " + fn_ident + " not found!");
 }
 
+const GlobalSymbols::ClassVars& GlobalSymbols::getClassVars(const std::string &cls_ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        return std::get<1>(cls->second);
+    }
+
+    throw std::invalid_argument("Class " + cls_ident + " not found!");
+}
+
 void GlobalSymbols::appendString(const std::string &str) {
     std::string label = "loc_str_val_" + std::to_string(strings_.size());
 
@@ -217,6 +228,10 @@ void GlobalSymbols::prettyPrint() const {
 
 const std::unordered_map<std::string, GlobalSymbols::FunctionType>& GlobalSymbols::getFunctions() const {
     return functions_;
+}
+
+const std::unordered_map<std::string, GlobalSymbols::ClassType>& GlobalSymbols::getClasses() const {
+    return classes_;
 }
 
 GlobalSymbols::GlobalSymbols() {

@@ -1,6 +1,6 @@
 #include "CodeGenVisitor.h"
 #include "GlobalSymbols.h"
-#include "FunctionFrame.h"
+#include "MemoryFrames.h"
 #include "CompilerOutput.h"
 #include "LabelGenerator.h"
 
@@ -21,7 +21,7 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
                                               "  pushl \%ebp\n"
                                               "  movl \%esp, \%ebp\n");
 
-    auto bytes_to_alloc = FunctionFrame::getInstance().getNumberOfBytesAlloc(fn_def->ident_);
+    auto bytes_to_alloc = MemoryFrames::getInstance().getNumberOfBytesAlloc(fn_def->ident_);
 
     if (bytes_to_alloc > 0)
         CompilerOutput::getInstance().printOutput("  subl $" + std::to_string(bytes_to_alloc) +
@@ -257,7 +257,7 @@ void CodeGenVisitor::visitFor(For *for_)
 
     CompilerOutput::getInstance().printOutput("  popl \%ebx\n");
     CompilerOutput::getInstance().printOutput("  movl \%ebx, " +
-        std::to_string(FunctionFrame::getInstance().getPointer(
+        std::to_string(MemoryFrames::getInstance().getPointer(
                 for_->function_name_, for_->ident_, for_->index_of_var_)) +
                 "(\%ebp)\n");
     CompilerOutput::getInstance().printOutput("  movl (\%ebx), \%ebx\n"); // length of array
@@ -270,7 +270,7 @@ void CodeGenVisitor::visitFor(For *for_)
     CompilerOutput::getInstance().printOutput("  decl \%ebx\n"); // --length
     CompilerOutput::getInstance().printOutput(for_cond + ":\n");
     CompilerOutput::getInstance().printOutput("  addl $4, " +
-        std::to_string(FunctionFrame::getInstance().getPointer(
+        std::to_string(MemoryFrames::getInstance().getPointer(
                 for_->function_name_, for_->ident_, for_->index_of_var_)) +
                 "(\%ebp)\n"); // ++ptr
     CompilerOutput::getInstance().printOutput("  test \%ebx, \%ebx\n");
@@ -299,7 +299,7 @@ void CodeGenVisitor::visitSExp(SExp *s_exp)
 void CodeGenVisitor::visitNoInit(NoInit *no_init)
 {
     CompilerOutput::getInstance().printOutput("  movl $0, " + std::to_string(
-        FunctionFrame::getInstance().getPointer(no_init->function_name_, no_init->ident_, no_init->index_of_var_)) +
+        MemoryFrames::getInstance().getPointer(no_init->function_name_, no_init->ident_, no_init->index_of_var_)) +
         "(\%ebp)\n");
 }
 
@@ -309,19 +309,19 @@ void CodeGenVisitor::visitInit(Init *init)
     {
         if (init->expr_->is_always_false_)
             CompilerOutput::getInstance().printOutput("  movl $0, " + std::to_string(
-                    FunctionFrame::getInstance().getPointer(
+                    MemoryFrames::getInstance().getPointer(
                         init->function_name_, init->ident_, init->index_of_var_)) +
                     "(\%ebp)\n");
         else
             CompilerOutput::getInstance().printOutput("  movl $-1, " + std::to_string(
-                    FunctionFrame::getInstance().getPointer(
+                    MemoryFrames::getInstance().getPointer(
                         init->function_name_, init->ident_, init->index_of_var_)) +
                     "(\%ebp)\n");
     }
     else if (init->expr_->type_ == "int" && init->expr_->has_value_)
     {
         CompilerOutput::getInstance().printOutput("  movl $" + std::to_string(init->expr_->value_) +
-                ", " + std::to_string(FunctionFrame::getInstance().getPointer(
+                ", " + std::to_string(MemoryFrames::getInstance().getPointer(
                     init->function_name_, init->ident_, init->index_of_var_)) +
                 "(\%ebp)\n");
     }
@@ -330,7 +330,7 @@ void CodeGenVisitor::visitInit(Init *init)
         init->expr_->accept(this);
         CompilerOutput::getInstance().printOutput("  popl \%eax\n");
         CompilerOutput::getInstance().printOutput("  movl \%eax, " + std::to_string(
-            FunctionFrame::getInstance().getPointer(init->function_name_, init->ident_, init->index_of_var_)) +
+            MemoryFrames::getInstance().getPointer(init->function_name_, init->ident_, init->index_of_var_)) +
             "(\%ebp)\n");
     }
 }
@@ -384,13 +384,13 @@ void CodeGenVisitor::visitEVar(EVar *e_var)
     if ((!this->get_pointer_ && !e_var->is_reference_) || (this->get_pointer_ && e_var->is_reference_))
     {
         CompilerOutput::getInstance().printOutput("  pushl " + std::to_string(
-            FunctionFrame::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
+            MemoryFrames::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
             "(\%ebp)\n");
     }
     else if (this->get_pointer_ && !e_var->is_reference_)
     {
         CompilerOutput::getInstance().printOutput("  leal " +
-        std::to_string(FunctionFrame::getInstance().getPointer(
+        std::to_string(MemoryFrames::getInstance().getPointer(
                 e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
                 "(\%ebp), \%eax\n");
         CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
@@ -398,7 +398,7 @@ void CodeGenVisitor::visitEVar(EVar *e_var)
     else if (!this->get_pointer_ && e_var->is_reference_)
     {
         CompilerOutput::getInstance().printOutput("  movl " + std::to_string(
-            FunctionFrame::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
+            MemoryFrames::getInstance().getPointer(e_var->function_name_, e_var->ident_, e_var->index_of_var_)) +
             "(\%ebp), \%eax\n");
         CompilerOutput::getInstance().printOutput("  pushl (\%eax)\n");
     }

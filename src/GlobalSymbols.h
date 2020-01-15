@@ -46,6 +46,8 @@ public:
 
     const Locals& getFunctionLocals(const std::string &fn_ident) const;
 
+    const ClassVars& getClassVars(const std::string &cls_ident) const;
+
     void appendString(const std::string &str);
 
     const std::string& getStringLabel(const std::string &str) const;
@@ -65,6 +67,8 @@ public:
     void prettyPrint() const;
 
     const std::unordered_map<std::string, FunctionType>& getFunctions() const;
+
+    const std::unordered_map<std::string, ClassType>& getClasses() const;
 
 private:
     GlobalSymbols();
