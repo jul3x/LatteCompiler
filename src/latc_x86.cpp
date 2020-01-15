@@ -3,6 +3,7 @@
 
 #include "Parser.h"
 #include "Absyn.h"
+#include "ClassesVisitor.h"
 #include "SemAnalysisVisitor.h"
 #include "CodeGenVisitor.h"
 #include "GlobalSymbolsCollector.h"
@@ -73,6 +74,10 @@ int main(int argc, char **argv)
         {
             if (GlobalSymbols::getInstance().areCorrect())
             {
+                ClassesVisitor *cls_analysis = new ClassesVisitor();
+                cls_analysis->visitProgram(parse_tree);
+                delete cls_analysis;
+
                 SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
                 sem_analysis->visitProgram(parse_tree);
                 delete sem_analysis;

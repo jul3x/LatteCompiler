@@ -41,8 +41,6 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 
 void SemAnalysisVisitor::visitClsDef(ClsDef *cls_def)
 {
-    ControlFlow::getInstance().newClass(cls_def->ident_);
-
     cls_def->listclsfld_->accept(this);
 }
 
@@ -53,30 +51,6 @@ void SemAnalysisVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 
 void SemAnalysisVisitor::visitVarDef(VarDef *var_def)
 {
-    if (!GlobalSymbols::getInstance().checkType(var_def->type_->get()))
-    {
-        CompilerOutput::getInstance().error(var_def->type_->line_number_,
-            var_def->type_->get() + " is not a valid type name!");
-        return;
-    }
-
-    if (var_def->type_->get().substr(0, 4) == "void")
-    {
-        CompilerOutput::getInstance().error(var_def->type_->line_number_,
-            "Cannot declare variable with void type!");
-        return;
-    }
-
-    auto class_name = ControlFlow::getInstance().getCurrentClassName();
-
-    for (const auto &ident : *(var_def->listident_))
-    {
-        if (!GlobalSymbols::getInstance().appendClassVars(class_name, ident, var_def->type_->get()))
-        {
-            std::string error = "Identifier " + ident + " was already declared in this scope!";
-            CompilerOutput::getInstance().error(var_def->line_number_, error);
-        }
-    }
 }
 
 void SemAnalysisVisitor::visitMetDef(MetDef *met_def)

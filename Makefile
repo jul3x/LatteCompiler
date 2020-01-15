@@ -8,7 +8,7 @@ BISON=bison
 BISON_OPTS=-t -pLatte
 
 OBJS=Absyn.o Lexer.o Parser.o \
-	 SemAnalysisVisitor.o GlobalSymbolsCollector.o CodeGenVisitor.o \
+	 SemAnalysisVisitor.o GlobalSymbolsCollector.o ClassesVisitor.o CodeGenVisitor.o \
 	 CompilerOutput.o ControlFlow.o MemoryFrames.o GlobalSymbols.o \
 	 LabelGenerator.o LocalSymbols.o Postprocess.o
 .PHONY: clean distclean
@@ -41,6 +41,9 @@ Parser.o: src/Parser.cpp src/Absyn.h
 SemAnalysisVisitor.o: src/SemAnalysisVisitor.cpp src/SemAnalysisVisitor.h src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/SemAnalysisVisitor.cpp
 
+ClassesVisitor.o: src/ClassesVisitor.cpp src/ClassesVisitor.h src/Absyn.h
+	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/ClassesVisitor.cpp
+
 CodeGenVisitor.o: src/CodeGenVisitor.cpp src/CodeGenVisitor.h src/Absyn.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/CodeGenVisitor.cpp
 
@@ -69,7 +72,7 @@ Postprocess.o: src/Postprocess.cpp src/Postprocess.h
 	${CC} ${CCFLAGS} -Wno-unused-parameter -c src/Postprocess.cpp
 
 latc_x86.o: src/latc_x86.cpp src/Parser.h src/Absyn.h \
-	src/SemAnalysisVisitor.h src/CodeGenVisitor.h \
+	src/SemAnalysisVisitor.h src/CodeGenVisitor.h src/ClassesVisitor.h \
 	src/GlobalSymbolsCollector.h src/GlobalSymbols.h \
 	src/ControlFlow.h src/CompilerOutput.h \
 	src/MemoryFrames.h src/Utils.h src/Postprocess.h
