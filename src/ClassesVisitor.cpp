@@ -17,14 +17,29 @@ void ClassesVisitor::visitProg(Prog *prog)
 
 void ClassesVisitor::visitClsDef(ClsDef *cls_def)
 {
-    ControlFlow::getInstance().newClass(cls_def->ident_);
+    if (!GlobalSymbols::getInstance().isClassInitialized(cls_def->ident_))
+    {
+        ControlFlow::getInstance().newClass(cls_def->ident_);
 
-    cls_def->listclsfld_->accept(this);
+        cls_def->listclsfld_->accept(this);
+
+        GlobalSymbols::getInstance().setClassInitialized(cls_def->ident_);
+    }
 }
 
 void ClassesVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
-    throw std::invalid_argument("Unfortunately inherited classes are not permitted in this version of latc_x86!");
+    if (!GlobalSymbols::getInstance().isClassInitialized(inh_cls_def->ident_1) &&
+         GlobalSymbols::getInstance().isClassInitialized(inh_cls_def->ident_2))
+    {
+        ControlFlow::getInstance().newClass(inh_cls_def->ident_1);
+
+        GlobalSymbols::getInstance().appendSymbolsFromInheritedClass(
+            inh_cls_def->ident_1, inh_cls_def->ident_2);
+        inh_cls_def->listclsfld_->accept(this);
+
+        GlobalSymbols::getInstance().setClassInitialized(inh_cls_def->ident_1);
+    }
 }
 
 void ClassesVisitor::visitVarDef(VarDef *var_def)
@@ -57,7 +72,14 @@ void ClassesVisitor::visitVarDef(VarDef *var_def)
 
 void ClassesVisitor::visitMetDef(MetDef *met_def)
 {
-    throw std::invalid_argument("Unfortunately methods in classes are not permitted in this version of latc_x86!");
+    auto class_name = ControlFlow::getInstance().getCurrentClassName();
+
+    visitIdent(met_def->ident_);
+
+    met_def->listarg_->insert(met_def->listarg_->begin(), new Ar(new VarType(class_name), "$this"));
+
+    met_def->listarg_->accept(this);
+    met_def->block_->accept(this);
 }
 
 void ClassesVisitor::visitAr(Ar *ar)
@@ -75,9 +97,11 @@ void ClassesVisitor::visitListClsFld(ListClsFld *list_cls_fld)
 
 void ClassesVisitor::visitListTopDef(ListTopDef *list_top_def)
 {
-    for (ListTopDef::iterator i = list_top_def->begin(); i != list_top_def->end(); ++i)
+    // TODO - make it faster
+    for (auto &i : *list_top_def)
     {
-        (*i)->accept(this);
+        for (auto &j : *list_top_def)
+            j->accept(this);
     }
 }
 

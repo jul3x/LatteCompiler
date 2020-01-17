@@ -17,7 +17,7 @@ public:
     using Locals = std::vector<std::tuple<std::string, std::string, int, bool>>;
     using FunctionType = std::tuple<Type*, ListArg*, Locals>;
 
-    using ClassVars = std::unordered_map<std::string, std::string>;
+    using ClassVars = std::vector<std::pair<std::string, std::string>>;
     using ClassType = std::tuple<std::string, ClassVars>;
 
     static GlobalSymbols& getInstance();
@@ -44,6 +44,8 @@ public:
     bool appendClassVars(const std::string &cls_ident, const std::string &var_ident,
                          const std::string &type);
 
+    void appendSymbolsFromInheritedClass(const std::string &cls_ident, const std::string &inh_ident);
+
     const Locals& getFunctionLocals(const std::string &fn_ident) const;
 
     const ClassVars& getClassVars(const std::string &cls_ident) const;
@@ -64,6 +66,10 @@ public:
 
     const std::string& getVarInClassType(const std::string &cls_ident, const std::string &ident) const;
 
+    void setClassInitialized(const std::string &cls_ident);
+
+    bool isClassInitialized(const std::string &cls_ident) const;
+
     void prettyPrint() const;
 
     const std::unordered_map<std::string, FunctionType>& getFunctions() const;
@@ -83,7 +89,9 @@ private:
                               std::vector<bool> &visited, std::vector<bool> &stack) const;
 
     std::unordered_map<std::string, FunctionType> functions_;
+
     std::unordered_map<std::string, ClassType> classes_;
+    std::unordered_map<std::string, bool> class_initialized_;
 
     std::unordered_map<std::string, std::string> strings_;
     std::set<std::string> lib_functions_;

@@ -56,7 +56,7 @@ bool GlobalSymbols::appendClass(const std::string &ident,
     if (!checkExistance(ident))
     {
         classes_.emplace(std::make_pair(ident, std::make_tuple(parent, ClassVars{})));
-
+        class_initialized_.emplace(std::make_pair(ident, false));
         return true;
     }
 
@@ -95,17 +95,28 @@ bool GlobalSymbols::appendClassVars(const std::string &cls_ident, const std::str
 
     if (cls != classes_.end())
     {
-        auto cls_var = std::get<1>(cls->second).find(var_ident);
-        if (cls_var != std::get<1>(cls->second).end())
+        for (const auto &cls_var : std::get<1>(cls->second))
         {
-            return false;
+            if (cls_var.first == var_ident)
+                return false;
         }
 
-        std::get<1>(cls->second).emplace(std::make_pair(var_ident, type));
+        std::get<1>(cls->second).push_back(std::make_pair(var_ident, type));
         return true;
     }
 
     return false;
+}
+
+void GlobalSymbols::appendSymbolsFromInheritedClass(const std::string &cls_ident,
+                                                    const std::string &inh_ident) {
+    auto cls = classes_.find(cls_ident);
+    auto inh = classes_.find(inh_ident);
+
+    for (const auto &inh_var : std::get<1>(inh->second))
+    {
+        std::get<1>(cls->second).push_back(inh_var);
+    }
 }
 
 const GlobalSymbols::Locals& GlobalSymbols::getFunctionLocals(const std::string &fn_ident) const {
@@ -200,17 +211,36 @@ const std::string& GlobalSymbols::getVarInClassType(const std::string &cls_ident
 
     if (cls != classes_.end())
     {
-        auto cls_var = std::get<1>(cls->second).find(ident);
-
-        if (cls_var != std::get<1>(cls->second).end())
+        for (const auto &cls_var : std::get<1>(cls->second))
         {
-            return cls_var->second;
+            if (cls_var.first == ident)
+                return cls_var.second;
         }
 
         throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
     }
 
     throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
+}
+
+void GlobalSymbols::setClassInitialized(const std::string &cls_ident) {
+    auto cls = class_initialized_.find(cls_ident);
+
+    if (cls != class_initialized_.end())
+    {
+        cls->second = true;
+    }
+}
+
+bool GlobalSymbols::isClassInitialized(const std::string &cls_ident) const {
+    auto cls = class_initialized_.find(cls_ident);
+
+    if (cls != class_initialized_.end())
+    {
+        return cls->second;
+    }
+
+    return false;
 }
 
 void GlobalSymbols::prettyPrint() const {
