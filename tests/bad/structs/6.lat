@@ -1,0 +1,9 @@
+class A
+{
+    int a;
+}
+
+int main() {
+    A[] a = new A;
+    return 0;
+}

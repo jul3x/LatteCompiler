@@ -1,0 +1,8 @@
+class A {
+    int z;
+}
+
+int main() {
+    B a;
+    return 0;
+}

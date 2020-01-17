@@ -1,0 +1,24 @@
+class A {
+    int[] a;
+    int b;
+}
+
+class B {
+    A[] a;
+}
+
+int main () {
+    B[] b = new B[3];
+
+    b[2].a = new A[5];
+
+    b[2].a[3].a = new int[10];
+
+    b[2].a[3].a[2] = 5;
+
+    b[2].a[3].a[2]++;
+
+    printInt(b[2].a[3].a[2]);
+
+    return 0;
+}

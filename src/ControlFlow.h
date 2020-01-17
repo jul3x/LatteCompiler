@@ -14,6 +14,8 @@ public:
 
     void newFunction(const std::string &name, const std::string &ret_type, int line_number);
 
+    void newClass(const std::string &name);
+
     void enterInfiniteLoop();
 
     void exitInfiniteLoop();
@@ -21,6 +23,8 @@ public:
     const std::string& getCurrentFunctionName() const;
 
     const std::string& getCurrentFunctionType() const;
+
+    const std::string& getCurrentClassName() const;
 
     void addBlock();
 
@@ -61,6 +65,8 @@ private:
     std::vector<std::vector<bool>> reachable_;
 
     std::vector<int> infinite_loops_;
+
+    std::string current_class_;
 
     int virtual_p1_, virtual_p2_;
     bool was_if_;

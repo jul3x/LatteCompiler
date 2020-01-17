@@ -3,13 +3,14 @@
 
 #include "Parser.h"
 #include "Absyn.h"
+#include "ClassesVisitor.h"
 #include "SemAnalysisVisitor.h"
 #include "CodeGenVisitor.h"
 #include "GlobalSymbolsCollector.h"
 #include "GlobalSymbols.h"
 #include "ControlFlow.h"
 #include "CompilerOutput.h"
-#include "FunctionFrame.h"
+#include "MemoryFrames.h"
 #include "Utils.h"
 #include "Postprocess.h"
 
@@ -73,6 +74,10 @@ int main(int argc, char **argv)
         {
             if (GlobalSymbols::getInstance().areCorrect())
             {
+                ClassesVisitor *cls_analysis = new ClassesVisitor();
+                cls_analysis->visitProgram(parse_tree);
+                delete cls_analysis;
+
                 SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
                 sem_analysis->visitProgram(parse_tree);
                 delete sem_analysis;
@@ -87,8 +92,10 @@ int main(int argc, char **argv)
 
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
-            FunctionFrame::getInstance().generatePointers();
-            //FunctionFrame::getInstance().printPointers();
+            MemoryFrames::getInstance().generatePointers();
+            //MemoryFrames::getInstance().printPointers();
+            MemoryFrames::getInstance().generateClassOffsets();
+            MemoryFrames::getInstance().printClasses();
 
             CompilerOutput::getInstance().initializeOutputFile(out_file + ".bak");
 

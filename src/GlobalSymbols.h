@@ -16,7 +16,9 @@ class GlobalSymbols
 public:
     using Locals = std::vector<std::tuple<std::string, std::string, int, bool>>;
     using FunctionType = std::tuple<Type*, ListArg*, Locals>;
-    using ClassParent = std::string;
+
+    using ClassVars = std::unordered_map<std::string, std::string>;
+    using ClassType = std::tuple<std::string, ClassVars>;
 
     static GlobalSymbols& getInstance();
 
@@ -39,7 +41,12 @@ public:
     bool appendLocals(const std::string &fn_ident, const std::string &loc_ident,
                       const std::string &type, int index);
 
+    bool appendClassVars(const std::string &cls_ident, const std::string &var_ident,
+                         const std::string &type);
+
     const Locals& getFunctionLocals(const std::string &fn_ident) const;
+
+    const ClassVars& getClassVars(const std::string &cls_ident) const;
 
     void appendString(const std::string &str);
 
@@ -55,9 +62,13 @@ public:
 
     ListArg* getFunctionArgs(const std::string &ident) const;
 
+    const std::string& getVarInClassType(const std::string &cls_ident, const std::string &ident) const;
+
     void prettyPrint() const;
 
     const std::unordered_map<std::string, FunctionType>& getFunctions() const;
+
+    const std::unordered_map<std::string, ClassType>& getClasses() const;
 
 private:
     GlobalSymbols();
@@ -72,11 +83,12 @@ private:
                               std::vector<bool> &visited, std::vector<bool> &stack) const;
 
     std::unordered_map<std::string, FunctionType> functions_;
-    std::unordered_map<std::string, ClassParent> classes_;
+    std::unordered_map<std::string, ClassType> classes_;
 
     std::unordered_map<std::string, std::string> strings_;
     std::set<std::string> lib_functions_;
 
+    // helpers
     Type *void_type;
     Type *string_type;
     Type *int_type;

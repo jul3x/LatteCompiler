@@ -14,6 +14,10 @@ void ControlFlow::newFunction(const std::string &name, const std::string &ret_ty
     addBlock();
 }
 
+void ControlFlow::newClass(const std::string &name) {
+    current_class_ = name;
+}
+
 void ControlFlow::enterInfiniteLoop() {
     infinite_loops_.push_back(getCurrentBlock());
 }
@@ -28,6 +32,10 @@ const std::string& ControlFlow::getCurrentFunctionName() const {
 
 const std::string& ControlFlow::getCurrentFunctionType() const {
     return ret_types_.back();
+}
+
+const std::string& ControlFlow::getCurrentClassName() const {
+    return current_class_;
 }
 
 void ControlFlow::addBlock() {
