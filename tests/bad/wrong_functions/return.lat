@@ -1,0 +1,14 @@
+int main () {
+    int x = 2;
+
+    x = readInt();
+
+    if (x == 2)
+    {
+        error();
+    }
+    else
+    {
+        x = 3;
+    }
+}

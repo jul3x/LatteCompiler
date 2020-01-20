@@ -1,0 +1,11 @@
+class A {
+    int a;
+
+    void x() {
+        y();
+    }
+}
+
+int main () {
+    return 0;
+}

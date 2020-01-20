@@ -1,0 +1,19 @@
+class A
+{
+    int a, b, c;
+}
+
+class ParentB {
+    int x;
+
+    void set(int a) { x = a; printString(1); }
+}
+
+class B extends ParentB {
+    int y;
+}
+
+int main () {
+
+    return 0;
+}

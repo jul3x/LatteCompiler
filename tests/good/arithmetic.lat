@@ -1,0 +1,32 @@
+int main () {
+    int l = 12;
+    int h = 3;
+    printInt(l * h);
+    printInt(l - h);
+    printInt(l * h);
+    printInt(l / h);
+    printInt(l % h);
+    printString("===");
+    printInt(l * 3);
+    printInt(l - 3);
+    printInt(l * 3);
+    printInt(l / 3);
+    printInt(l % 3);
+    printString("---");
+    printInt(12 * h);
+    printInt(12 - h);
+    printInt(12 * h);
+    printInt(12 / h);
+    printInt(12 % h);
+    printString("___");
+    printInt(12 * 3);
+    printInt(12 - 3);
+    printInt(12 * 3);
+    printInt(12 / 3);
+    printInt(12 % 3);
+    printString("***");
+    printInt(-l);
+    printInt(-(10 - 2));
+    printInt(-(l + h));
+    return 0;
+}

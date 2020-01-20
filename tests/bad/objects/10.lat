@@ -1,0 +1,41 @@
+class A
+{
+    int a, b, c;
+
+    B getObject(int n) {
+        B obj = new B;
+
+        obj.set(n + a + b + c);
+        printInt(n + a + b + self.c);
+        return obj;
+    }
+}
+
+class ParentB {
+    int x;
+
+    void set(int a) { x = self.a; printString("done!"); }
+}
+
+class B extends ParentB {
+    int y;
+}
+
+int main () {
+    ParentB[] par_b = new ParentB[10];
+
+    A a = new A;
+
+    a.c = 1;
+    a.b = 1 + a.c;
+    a.a = a.b * 2;
+
+    par_b[4] = a.getObject(2);
+
+    for (ParentB x : par_b)
+    {
+        printInt(x.x);
+    }
+
+    return 0;
+}

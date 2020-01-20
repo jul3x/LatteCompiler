@@ -1,0 +1,23 @@
+class A {
+    int a;
+
+    int getA() { return a; }
+}
+
+class B extends A {
+    int b;
+}
+
+class C extends B {
+    int c;
+}
+
+int main () {
+    A a = new C;
+
+    a.a = 10;
+
+    printInt(a.getA());
+
+    return 0;
+}

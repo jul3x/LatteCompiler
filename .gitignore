@@ -1,3 +1,6 @@
+# IDE
+.vscode/*
+
 # Prerequisites
 *.d
 
@@ -5,6 +8,11 @@
 *.slo
 *.lo
 *.o
+!lib/runtime.o
+!lib/crt1.o
+!lib/crti.o
+!lib/crtn.o
+!lib/Scrt1.o
 *.obj
 
 # Precompiled Headers
@@ -24,9 +32,12 @@
 *.lai
 *.la
 *.a
+!lib/libc.a
 *.lib
 
 # Executables
-*.exe
-*.out
-*.app
+latc_x86
+
+# Tests output
+*.s
+!lib/runtime.s

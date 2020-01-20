@@ -1,0 +1,15 @@
+class A extends C {
+    int a;
+}
+
+class B extends A {
+    int b;
+}
+
+class C extends B {
+    int c;
+}
+
+int main () {
+    return 0;
+}

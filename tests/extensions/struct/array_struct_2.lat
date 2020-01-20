@@ -1,0 +1,25 @@
+class A {
+    int a, b;
+}
+
+int main () {
+    A a = new A;
+    a.b = 11;
+
+    A[] b = new A[10];
+
+    for (A x : b)
+    {
+        x.a = 10;
+        x.b = 10;
+    }
+
+    b[5] = a;
+
+    for (A x : b)
+    {
+        printInt(x.b);
+    }
+
+    return 0;
+}

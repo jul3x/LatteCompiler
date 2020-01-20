@@ -1,0 +1,13 @@
+class A
+{
+    int a;
+}
+
+int main ()
+{
+    A a = new A;
+    a.a = 10;
+
+    printInt(a.a);
+    return 0;
+}

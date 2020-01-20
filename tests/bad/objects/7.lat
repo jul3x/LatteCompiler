@@ -1,0 +1,14 @@
+class A {
+    int a;
+
+    int getA () {
+        return a;
+    }
+}
+
+int main () {
+    A a = new A;
+
+    printInt(a.getB());
+    return 0;
+}

@@ -1,0 +1,13 @@
+// Author: Tomasz Wysocki 277696
+int main() {
+    printString("a" + "b" + "\n");
+
+    string x = "";
+    string y = "costam\n";
+    string z = x + y;
+
+    printString(z + z);
+    printString(z + z);
+
+    return 0;
+}
