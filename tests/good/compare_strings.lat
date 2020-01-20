@@ -1,0 +1,23 @@
+int main()
+{
+    string x = "ala";
+    string y = "ma kota";
+    printBool("ala" == "ala");
+    printBool("ala" == "lala");
+    printBool("ala" != "ala");
+    printBool("ala" != "lala");
+    printBool(x == "ala");
+    printBool(x != "ala");
+    printBool(x == y);
+    printBool(x != y);
+
+    return 0;
+}
+
+void printBool(boolean x)
+{
+    if (x)
+        printString("true");
+    else
+        printString("false");
+}

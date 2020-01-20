@@ -898,12 +898,21 @@ void CodeGenVisitor::visitERel(ERel *e_rel)
         auto is_gt = dynamic_cast<GTH*>(e_rel->relop_);
         auto is_ge = dynamic_cast<GE*>(e_rel->relop_);
 
-        CompilerOutput::getInstance().printOutput("  popl \%eax\n");
-        CompilerOutput::getInstance().printOutput("  cmpl \%eax, (\%esp)\n");
-
         std::string lf = LabelGenerator::getInstance().getNewLabel();
         std::string ln = LabelGenerator::getInstance().getNewLabel();
 
+        if (e_rel->expr_1->type_ == "string" && e_rel->expr_2->type_ == "string")
+        {
+            CompilerOutput::getInstance().printOutput("  call strcmp\n");
+            CompilerOutput::getInstance().printOutput("  addl $4, \%esp\n");
+            CompilerOutput::getInstance().printOutput("  test \%eax, \%eax\n");
+
+        }
+        else
+        {
+            CompilerOutput::getInstance().printOutput("  popl \%eax\n");
+            CompilerOutput::getInstance().printOutput("  cmpl \%eax, (\%esp)\n");
+        }
         if (is_eq != nullptr)
         {
             CompilerOutput::getInstance().printOutput("  jne " + lf + "\n");

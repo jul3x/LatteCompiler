@@ -1132,10 +1132,16 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
             }
         }
 
+        if (e_rel->expr_1->type_ == "string" &&
+            e_rel->expr_2->type_ == "string")
+        {
+            is_ok = true;
+        }
+
         if (!is_ok)
         {
             std::string error = "Relation operation can be performed only using"
-                                " two ints, two booleans or for checking if class is null!";
+                                " two standard type expressions or for checking if class is null!";
             CompilerOutput::getInstance().error(e_rel->expr_1->line_number_, error);
             return;
         }
