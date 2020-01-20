@@ -75,6 +75,7 @@ void SemAnalysisVisitor::visitMetDef(MetDef *met_def)
     visitIdent(met_def->ident_);
     met_def->listarg_->accept(this);
     met_def->block_->accept(this);
+    met_def->owner_ = class_name;
 
     LocalSymbols::getInstance().exitBlock();
 }
@@ -822,6 +823,9 @@ void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
     {
         e_cls_app->type_ =
             GlobalSymbols::getInstance().getMethodType(e_cls_app->expr_->type_, e_cls_app->ident_);
+
+        e_cls_app->owner_ =
+            GlobalSymbols::getInstance().getMethodOwner(e_cls_app->expr_->type_, e_cls_app->ident_);
     }
     catch (const std::invalid_argument& e)
     {

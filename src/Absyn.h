@@ -404,6 +404,8 @@ public:
     ListArg *listarg_;
     Block *block_;
 
+    std::string owner_;
+
     MetDef(const MetDef &);
     MetDef &operator=(const MetDef &);
     MetDef(Type *p1, Ident p2, ListArg *p3, Block *p4);
@@ -937,6 +939,8 @@ public:
     Expr *expr_;
     Ident ident_;
     ListExpr *listexpr_;
+
+    std::string owner_;
 
     EClsApp(const EClsApp &);
     EClsApp &operator=(const EClsApp &);

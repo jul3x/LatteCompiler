@@ -78,6 +78,8 @@ public:
 
     ListArg* getMethodArgs(const std::string &cls_ident, const std::string &ident) const;
 
+    const std::string& getMethodOwner(const std::string &cls_ident, const std::string &ident) const;
+
     const std::string& getVarInClassType(const std::string &cls_ident, const std::string &ident) const;
 
     void setClassInitialized(const std::string &cls_ident);

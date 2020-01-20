@@ -293,6 +293,24 @@ ListArg* GlobalSymbols::getMethodArgs(const std::string &cls_ident, const std::s
     throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
 }
 
+const std::string& GlobalSymbols::getMethodOwner(const std::string &cls_ident, const std::string &ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        auto meth = std::get<2>(cls->second).find(ident);
+
+        if (meth != std::get<2>(cls->second).end())
+        {
+            return std::get<2>(meth->second);
+        }
+
+        throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
+    }
+
+    throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
+}
+
 const std::string& GlobalSymbols::getVarInClassType(const std::string &cls_ident, const std::string &ident) const {
     auto cls = classes_.find(cls_ident);
 

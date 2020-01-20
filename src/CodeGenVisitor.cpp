@@ -41,12 +41,12 @@ void CodeGenVisitor::visitFnDef(FnDef *fn_def)
 
 void CodeGenVisitor::visitClsDef(ClsDef *cls_def)
 {
-    // TODO
+    cls_def->listclsfld_->accept(this);
 }
 
 void CodeGenVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
-    // TODO
+    inh_cls_def->listclsfld_->accept(this);
 }
 
 void CodeGenVisitor::visitVarDef(VarDef *var_def)
@@ -56,7 +56,27 @@ void CodeGenVisitor::visitVarDef(VarDef *var_def)
 
 void CodeGenVisitor::visitMetDef(MetDef *met_def)
 {
-    // TODO
+    CompilerOutput::getInstance().printOutput("\n" + met_def->owner_ + "." + met_def->ident_ + ":\n"
+                                              "  pushl \%ebp\n"
+                                              "  movl \%esp, \%ebp\n");
+
+    auto bytes_to_alloc =
+        MemoryFrames::getInstance().getNumberOfBytesAlloc(met_def->owner_ + "." + met_def->ident_);
+
+    if (bytes_to_alloc > 0)
+        CompilerOutput::getInstance().printOutput("  subl $" + std::to_string(bytes_to_alloc) +
+                ", \%esp\n");
+
+    met_def->type_->accept(this);
+    visitIdent(met_def->ident_);
+    met_def->listarg_->accept(this);
+    met_def->block_->accept(this);
+
+    if (GlobalSymbols::getInstance().getFunctionType(met_def->owner_ + "." + met_def->ident_) == "void")
+    {
+        CompilerOutput::getInstance().printOutput("  leave\n"
+                                                  "  ret\n");
+    }
 }
 
 void CodeGenVisitor::visitAr(Ar *ar)
@@ -523,7 +543,42 @@ void CodeGenVisitor::visitEApp(EApp *e_app)
 
 void CodeGenVisitor::visitEClsApp(EClsApp *e_cls_app)
 {
-    // TODO
+    visitIdent(e_cls_app->ident_);
+
+    CodeGenVisitor *get_value = new CodeGenVisitor(false);
+
+    for (auto it = e_cls_app->listexpr_->rbegin(); it != e_cls_app->listexpr_->rend(); ++it)
+    {
+        if ((*it)->has_value_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $" +
+                    std::to_string((*it)->value_) + "\n");
+        }
+        else if ((*it)->is_always_false_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $0\n");
+        }
+        else if ((*it)->is_always_true_)
+        {
+            CompilerOutput::getInstance().printOutput("  pushl $-1\n");
+        }
+        else
+        {
+            (*it)->accept(get_value);
+        }
+    }
+
+    e_cls_app->expr_->accept(get_value);
+
+    delete get_value;
+
+    CompilerOutput::getInstance().printOutput(
+            "  call " + e_cls_app->owner_ + "." + e_cls_app->ident_ + "\n");
+
+    CompilerOutput::getInstance().printOutput("  addl $" +
+            std::to_string(4 * (e_cls_app->listexpr_->size() + 1)) + ", \%esp\n");
+
+    CompilerOutput::getInstance().printOutput("  pushl \%eax\n");
 }
 
 void CodeGenVisitor::visitENeg(ENeg *e_neg)
