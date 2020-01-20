@@ -1,0 +1,9 @@
+class A {
+    void printInt(int a) {
+
+    }
+}
+
+int main () {
+    return 0;
+}

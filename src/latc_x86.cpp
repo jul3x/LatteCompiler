@@ -78,6 +78,13 @@ int main(int argc, char **argv)
                 cls_analysis->visitProgram(parse_tree);
                 delete cls_analysis;
 
+                GlobalSymbols::getInstance().generateClassParents();
+
+                if (CompilerOutput::getInstance().printErrorMsgs())
+                {
+                    return 1;
+                }
+
                 SemAnalysisVisitor *sem_analysis = new SemAnalysisVisitor();
                 sem_analysis->visitProgram(parse_tree);
                 delete sem_analysis;
@@ -93,7 +100,7 @@ int main(int argc, char **argv)
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
             MemoryFrames::getInstance().generatePointers();
-            //MemoryFrames::getInstance().printPointers();
+            MemoryFrames::getInstance().printPointers();
             MemoryFrames::getInstance().generateClassOffsets();
             MemoryFrames::getInstance().printClasses();
 
