@@ -19,7 +19,6 @@ void ClassesVisitor::visitClsDef(ClsDef *cls_def)
 {
     if (!GlobalSymbols::getInstance().isClassInitialized(cls_def->ident_))
     {
-        fprintf(stderr, "%s:\n", cls_def->ident_.c_str());
         ControlFlow::getInstance().newClass(cls_def->ident_);
 
         cls_def->listclsfld_->accept(this);
@@ -33,7 +32,6 @@ void ClassesVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
     if (!GlobalSymbols::getInstance().isClassInitialized(inh_cls_def->ident_1) &&
          GlobalSymbols::getInstance().isClassInitialized(inh_cls_def->ident_2))
     {
-        fprintf(stderr, "%s:\n", inh_cls_def->ident_1.c_str());
         ControlFlow::getInstance().newClass(inh_cls_def->ident_1);
 
         GlobalSymbols::getInstance().appendSymbolsFromInheritedClass(
@@ -509,7 +507,6 @@ void ClassesVisitor::visitListClsFld(ListClsFld *list_cls_fld)
 
 void ClassesVisitor::visitListTopDef(ListTopDef *list_top_def)
 {
-    // TODO - make it faster
     for (auto &i : *list_top_def)
     {
         for (auto &j : *list_top_def)
@@ -553,9 +550,9 @@ Expr* ClassesVisitor::replaceIfUnknown(Expr *expr) {
     if (expr_1_var != nullptr && !GlobalSymbols::getInstance().methodLocalExists(expr_1_var->ident_))
     {
         auto ident = expr_1_var->ident_;
-        fprintf(stderr, "Replaced: %s\n", ident.c_str());
 
         new_expr = new EClsVar(new EVar("self"), ident);
+        delete expr;
         return new_expr;
     }
 
@@ -568,10 +565,10 @@ Expr* ClassesVisitor::replaceIfUnknown(Expr *expr) {
         catch (const std::invalid_argument &e)
         {
             auto ident = expr_1_app->ident_;
-            auto args = expr_1_app->listexpr_;
-            fprintf(stderr, "Function Replaced: %s\n", ident.c_str());
+            auto args = expr_1_app->listexpr_->clone();
 
             new_expr = new EClsApp(new EVar("self"), ident, args);
+            delete expr;
             return new_expr;
         }
     }

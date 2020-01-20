@@ -100,9 +100,7 @@ int main(int argc, char **argv)
         if (!CompilerOutput::getInstance().printErrorMsgs())
         {
             MemoryFrames::getInstance().generatePointers();
-            MemoryFrames::getInstance().printPointers();
             MemoryFrames::getInstance().generateClassOffsets();
-            MemoryFrames::getInstance().printClasses();
 
             CompilerOutput::getInstance().initializeOutputFile(out_file + ".bak");
 

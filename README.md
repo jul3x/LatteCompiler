@@ -1,11 +1,11 @@
 # LatteCompiler
-Simple compiler from Latte (statically typed language) to x86 GAS assembly.  
+Simple compiler from Latte (statically typed language with object-based programming) to x86 GAS assembly.  
 Second task of Compilers Construction course at MIMUW.
 
 # Language
 Latte is a statically typed language with syntax and semantics very similar to Java.  
 Non-context grammar of this language is described in src/Latte.cf file (BNF format).  
-For now - this version of latc_x86 does not support any extension of Latte language.
+This version of latc_x86 supports arrays, structs, object inheritance and methods (without virtual methods).
 
 # Features
 
@@ -46,5 +46,5 @@ runs every test in tests directory and checks if compiled code produces desired 
     * tests - contains *.lat, *.input and *.output files for tests
         * bad - semantic or syntax errors that compiler should recognise
         * good - good code with appropriate desired output
-        * extensions - for now semantically bad code (this version of compiler does not support extensions)
+        * extensions - good code for arrays, structs and objects
 
