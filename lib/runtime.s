@@ -1,7 +1,7 @@
 .data
 format_string: .string "%s\n"
 format: .string "%d\n"
-error_str: .string "runtime error\n"
+error_str: .string "runtime error"
 scanf_int: .string "%d%*c"
 scanf_str: .string "%255[^\n]%*c"
 
@@ -36,6 +36,9 @@ error:
   movl %esp, %ebp
   pushl $error_str
   call printString
+  add $4, %esp
+  pushl stdout
+  call fflush
   add $4, %esp
   movl $1, %eax
   movl $0, %ebx

@@ -1,4 +1,6 @@
 #include "ControlFlow.h"
+#include "GlobalSymbols.h"
+
 
 ControlFlow& ControlFlow::getInstance() {
     static ControlFlow instance;
@@ -85,7 +87,8 @@ bool ControlFlow::setTermination(const std::string &type) {
         while_block_term_ = true;
     }
 
-    if (type != ret_types_.back())
+    if (type != ret_types_.back() &&
+        !GlobalSymbols::getInstance().isClassParent(type, ret_types_.back()))
     {
         return false;
     }

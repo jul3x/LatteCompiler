@@ -1,0 +1,11 @@
+class A {
+    int a;
+
+    int fun(int n) {
+        int b;
+
+        return x;
+    }
+}
+
+int main () { return 0; }

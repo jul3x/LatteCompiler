@@ -1,0 +1,18 @@
+class A {
+    int a;
+}
+
+class B extends A {
+    int b;
+}
+
+class C {
+    int c;
+}
+
+int main ()
+{
+    A a = new C;
+
+    return 0;
+}

@@ -55,8 +55,9 @@ bool GlobalSymbols::appendClass(const std::string &ident,
                                 const std::string &parent) {
     if (!checkExistance(ident))
     {
-        classes_.emplace(std::make_pair(ident, std::make_tuple(parent, ClassVars{})));
-
+        classes_.emplace(std::make_pair(ident,
+            std::make_tuple(parent, ClassVars{}, ClassMethods{})));
+        class_initialized_.emplace(std::make_pair(ident, false));
         return true;
     }
 
@@ -95,17 +96,67 @@ bool GlobalSymbols::appendClassVars(const std::string &cls_ident, const std::str
 
     if (cls != classes_.end())
     {
-        auto cls_var = std::get<1>(cls->second).find(var_ident);
-        if (cls_var != std::get<1>(cls->second).end())
+        for (const auto &cls_var : std::get<1>(cls->second))
         {
-            return false;
+            if (cls_var.first == var_ident)
+                return false;
         }
 
-        std::get<1>(cls->second).emplace(std::make_pair(var_ident, type));
+        std::get<1>(cls->second).push_back(std::make_pair(var_ident, type));
         return true;
     }
 
     return false;
+}
+
+bool GlobalSymbols::appendClassMethod(const std::string &cls_ident, const std::string &ident,
+                                      Type *type, ListArg *args) {
+    auto cls = classes_.find(cls_ident);
+
+    if (checkExistance(ident))
+    {
+        return false;
+    }
+
+    if (cls != classes_.end())
+    {
+        auto meth = std::get<2>(cls->second).find(ident);
+
+        if (meth != std::get<2>(cls->second).end())
+            return false;
+
+        std::get<2>(cls->second).insert(std::make_pair(ident, std::make_tuple(type, args, cls_ident)));
+        temporary_method_locals_.clear();
+        return true;
+    }
+
+    return false;
+}
+
+void GlobalSymbols::appendClassMethodLocal(const std::string &local) {
+    temporary_method_locals_.insert(local);
+}
+
+bool GlobalSymbols::methodLocalExists(const std::string &local) {
+    auto it = temporary_method_locals_.find(local);
+
+    return it != temporary_method_locals_.end();
+}
+
+void GlobalSymbols::appendSymbolsFromInheritedClass(const std::string &cls_ident,
+                                                    const std::string &inh_ident) {
+    auto cls = classes_.find(cls_ident);
+    auto inh = classes_.find(inh_ident);
+
+    for (const auto &inh_var : std::get<1>(inh->second))
+    {
+        std::get<1>(cls->second).push_back(inh_var);
+    }
+
+    for (const auto &inh_meth : std::get<2>(inh->second))
+    {
+        std::get<2>(cls->second).insert(inh_meth);
+    }
 }
 
 const GlobalSymbols::Locals& GlobalSymbols::getFunctionLocals(const std::string &fn_ident) const {
@@ -125,6 +176,17 @@ const GlobalSymbols::ClassVars& GlobalSymbols::getClassVars(const std::string &c
     if (cls != classes_.end())
     {
         return std::get<1>(cls->second);
+    }
+
+    throw std::invalid_argument("Class " + cls_ident + " not found!");
+}
+
+const GlobalSymbols::ClassMethods& GlobalSymbols::getClassMethods(const std::string &cls_ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        return std::get<2>(cls->second);
     }
 
     throw std::invalid_argument("Class " + cls_ident + " not found!");
@@ -195,22 +257,95 @@ ListArg* GlobalSymbols::getFunctionArgs(const std::string &ident) const {
     }
 }
 
-const std::string& GlobalSymbols::getVarInClassType(const std::string &cls_ident, const std::string &ident) const {
+std::string GlobalSymbols::getMethodType(const std::string &cls_ident, const std::string &ident) const {
     auto cls = classes_.find(cls_ident);
 
     if (cls != classes_.end())
     {
-        auto cls_var = std::get<1>(cls->second).find(ident);
+        auto meth = std::get<2>(cls->second).find(ident);
 
-        if (cls_var != std::get<1>(cls->second).end())
+        if (meth != std::get<2>(cls->second).end())
         {
-            return cls_var->second;
+            return std::get<0>(meth->second)->get();
         }
 
         throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
     }
 
     throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
+}
+
+ListArg* GlobalSymbols::getMethodArgs(const std::string &cls_ident, const std::string &ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        auto meth = std::get<2>(cls->second).find(ident);
+
+        if (meth != std::get<2>(cls->second).end())
+        {
+            return std::get<1>(meth->second);
+        }
+
+        throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
+    }
+
+    throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
+}
+
+const std::string& GlobalSymbols::getMethodOwner(const std::string &cls_ident, const std::string &ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        auto meth = std::get<2>(cls->second).find(ident);
+
+        if (meth != std::get<2>(cls->second).end())
+        {
+            return std::get<2>(meth->second);
+        }
+
+        throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
+    }
+
+    throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
+}
+
+const std::string& GlobalSymbols::getVarInClassType(const std::string &cls_ident, const std::string &ident) const {
+    auto cls = classes_.find(cls_ident);
+
+    if (cls != classes_.end())
+    {
+        for (const auto &cls_var : std::get<1>(cls->second))
+        {
+            if (cls_var.first == ident)
+                return cls_var.second;
+        }
+
+        throw std::invalid_argument("Class \"" + cls_ident + "\" does not contain symbol \"" + ident + "\"!");
+    }
+
+    throw std::invalid_argument("Unknown variable type \"" + cls_ident + "\"!");
+}
+
+void GlobalSymbols::setClassInitialized(const std::string &cls_ident) {
+    auto cls = class_initialized_.find(cls_ident);
+
+    if (cls != class_initialized_.end())
+    {
+        cls->second = true;
+    }
+}
+
+bool GlobalSymbols::isClassInitialized(const std::string &cls_ident) const {
+    auto cls = class_initialized_.find(cls_ident);
+
+    if (cls != class_initialized_.end())
+    {
+        return cls->second;
+    }
+
+    return false;
 }
 
 void GlobalSymbols::prettyPrint() const {
@@ -354,4 +489,38 @@ bool GlobalSymbols::checkInheritanceUtil(size_t cls_i, const std::vector<int> &i
 
     stack.at(cls_i) = false;
     return false;
+}
+
+void GlobalSymbols::generateClassParents() {
+    for (const auto &cls : classes_)
+    {
+        class_parents_.insert(std::make_pair(cls.first, std::set<std::string>{}));
+        generateClassParents(cls.first);
+    }
+}
+
+bool GlobalSymbols::isClassParent(const std::string &cls_ident, const std::string &parent) {
+    auto cls = class_parents_.find(cls_ident);
+
+    if (cls != class_parents_.end())
+    {
+        auto prnt = cls->second.find(parent);
+
+        if (prnt != cls->second.end())
+            return true;
+    }
+
+    return false;
+}
+
+inline void GlobalSymbols::generateClassParents(const std::string &cls_ident) {
+    auto cls = classes_.find(cls_ident);
+    auto parents = class_parents_.find(cls_ident);
+
+    while (!std::get<0>(cls->second).empty())
+    {
+        parents->second.insert(std::get<0>(cls->second));
+
+        cls = classes_.find(std::get<0>(cls->second));
+    }
 }

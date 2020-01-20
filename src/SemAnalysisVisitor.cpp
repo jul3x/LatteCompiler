@@ -41,12 +41,14 @@ void SemAnalysisVisitor::visitFnDef(FnDef *fn_def)
 
 void SemAnalysisVisitor::visitClsDef(ClsDef *cls_def)
 {
+    ControlFlow::getInstance().newClass(cls_def->ident_);
     cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitInhClsDef(InhClsDef *inh_cls_def)
 {
-    throw std::invalid_argument("Unfortunately inherited classes are not permitted in this version of latc_x86!");
+    ControlFlow::getInstance().newClass(inh_cls_def->ident_1);
+    inh_cls_def->listclsfld_->accept(this);
 }
 
 void SemAnalysisVisitor::visitVarDef(VarDef *var_def)
@@ -55,7 +57,27 @@ void SemAnalysisVisitor::visitVarDef(VarDef *var_def)
 
 void SemAnalysisVisitor::visitMetDef(MetDef *met_def)
 {
-    throw std::invalid_argument("Unfortunately methods in classes are not permitted in this version of latc_x86!");
+    LocalSymbols::getInstance().reset();
+    LocalSymbols::getInstance().enterBlock();
+
+    met_def->type_->accept(this);
+
+    if (!GlobalSymbols::getInstance().checkType(met_def->type_->get()))
+    {
+        CompilerOutput::getInstance().error(met_def->type_->line_number_,
+            met_def->type_->get() + " is not a valid type name!");
+        return;
+    }
+    auto class_name = ControlFlow::getInstance().getCurrentClassName();
+    ControlFlow::getInstance().newFunction(class_name + "." + met_def->ident_, met_def->type_->get(),
+                                           met_def->line_number_);
+
+    visitIdent(met_def->ident_);
+    met_def->listarg_->accept(this);
+    met_def->block_->accept(this);
+    met_def->owner_ = class_name;
+
+    LocalSymbols::getInstance().exitBlock();
 }
 
 void SemAnalysisVisitor::visitAr(Ar *ar)
@@ -146,7 +168,8 @@ void SemAnalysisVisitor::visitAss(Ass *ass)
     ass->expr_1->accept(this);
     ass->expr_2->accept(this);
 
-    if (ass->expr_1->type_ != ass->expr_2->type_)
+    if (ass->expr_1->type_ != ass->expr_2->type_ &&
+        !GlobalSymbols::getInstance().isClassParent(ass->expr_2->type_, ass->expr_1->type_))
     {
         std::string error = "Lvalue of type: " +
             (ass->expr_1->type_.empty() ? "undefined" : ass->expr_1->type_) +
@@ -356,13 +379,32 @@ void SemAnalysisVisitor::visitFor(For *for_)
 
     for_->expr_->accept(this);
 
-    if (for_->type_->get() + "[]" != for_->expr_->type_)
+    if (for_->expr_->type_.length() <= 2)
     {
         std::string error = "Type of iterator: " +
             (for_->type_->get().empty() ? "undefined" : for_->type_->get()) +
             " of for loop does not match type of array: " +
             (for_->expr_->type_.empty() ? "undefined" : for_->expr_->type_) + "!";
         CompilerOutput::getInstance().error(for_->type_->line_number_, error);
+        return;
+    }
+
+    if (for_->type_->get() + "[]" != for_->expr_->type_ &&
+        (!GlobalSymbols::getInstance().isClassParent(
+                for_->expr_->type_.substr(0, for_->expr_->type_.length() - 2), for_->type_->get())))
+    {
+        std::string error = "Type of iterator: " +
+            (for_->type_->get().empty() ? "undefined" : for_->type_->get()) +
+            " of for loop does not match type of array: " +
+            (for_->expr_->type_.empty() ? "undefined" : for_->expr_->type_) + "!";
+        CompilerOutput::getInstance().error(for_->type_->line_number_, error);
+        return;
+    }
+
+    if (for_->ident_ == "self")
+    {
+        std::string error = "Cannot declare variable named self!";
+        CompilerOutput::getInstance().error(for_->line_number_, error);
         return;
     }
 
@@ -416,6 +458,13 @@ void SemAnalysisVisitor::visitNoInit(NoInit *no_init)
         return;
     }
 
+    if (no_init->ident_ == "self")
+    {
+        std::string error = "Cannot declare variable named self!";
+        CompilerOutput::getInstance().error(no_init->line_number_, error);
+        return;
+    }
+
     if (!LocalSymbols::getInstance().append(no_init->ident_, no_init->type_))
     {
         std::string error = "Identifier " + no_init->ident_ + " was already declared in this scope!";
@@ -459,7 +508,15 @@ void SemAnalysisVisitor::visitInit(Init *init)
         return;
     }
 
-    if (init->expr_->type_ != init->type_)
+    if (init->ident_ == "self")
+    {
+        std::string error = "Cannot declare variable named self!";
+        CompilerOutput::getInstance().error(init->line_number_, error);
+        return;
+    }
+
+    if (init->expr_->type_ != init->type_ &&
+        !GlobalSymbols::getInstance().isClassParent(init->expr_->type_, init->type_))
     {
         std::string error = "Type of value: " +
             (init->expr_->type_.empty() ? "undefined" : init->expr_->type_) +
@@ -734,7 +791,8 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
 
     for (size_t i = 0; i < args->size(); ++i)
     {
-        if (e_app->listexpr_->at(i)->type_ != args->at(i)->getType())
+        if (e_app->listexpr_->at(i)->type_ != args->at(i)->getType() &&
+            !GlobalSymbols::getInstance().isClassParent(e_app->listexpr_->at(i)->type_, args->at(i)->getType()))
         {
             std::string error = e_app->ident_ + " function's " + std::to_string(i + 1) + 
                 " argument needs to be of type: " + args->at(i)->getType() +
@@ -746,7 +804,6 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
         }
     }
 
-    // TODO It depends on what function returns!
     e_app->is_lvalue_ = false;
     e_app->is_always_false_ = false;
     e_app->is_always_true_ = false;
@@ -757,12 +814,62 @@ void SemAnalysisVisitor::visitEApp(EApp *e_app)
     {
         ControlFlow::getInstance().setTermination(ControlFlow::getInstance().getCurrentFunctionType());
     }
-
 }
 
 void SemAnalysisVisitor::visitEClsApp(EClsApp *e_cls_app)
 {
-    throw std::invalid_argument("Unfortunately methods are not permitted in this version of latc_x86!");
+    e_cls_app->expr_->accept(this);
+    try
+    {
+        e_cls_app->type_ =
+            GlobalSymbols::getInstance().getMethodType(e_cls_app->expr_->type_, e_cls_app->ident_);
+
+        e_cls_app->owner_ =
+            GlobalSymbols::getInstance().getMethodOwner(e_cls_app->expr_->type_, e_cls_app->ident_);
+    }
+    catch (const std::invalid_argument& e)
+    {
+        CompilerOutput::getInstance().error(e_cls_app->line_number_,
+            e_cls_app->ident_ + " function does not exist in " + e_cls_app->expr_->type_ + " class!");
+
+        return;
+    }
+
+    visitIdent(e_cls_app->ident_);
+    e_cls_app->listexpr_->accept(this);
+
+    auto args = GlobalSymbols::getInstance().getMethodArgs(e_cls_app->expr_->type_, e_cls_app->ident_);
+
+    if (e_cls_app->listexpr_->size() != args->size() - 1)
+    {
+        std::string error = e_cls_app->ident_ + " function requires " + std::to_string(args->size() - 1) +
+            " arguments, provided: " + std::to_string(e_cls_app->listexpr_->size()) + "!";
+        CompilerOutput::getInstance().error(e_cls_app->listexpr_->line_number_, error);
+
+        return;
+    }
+
+    for (size_t i = 1; i < args->size(); ++i)
+    {
+        if (e_cls_app->listexpr_->at(i - 1)->type_ != args->at(i)->getType() &&
+            !GlobalSymbols::getInstance().isClassParent(e_cls_app->listexpr_->at(i - 1)->type_, args->at(i)->getType()))
+        {
+            std::string error = e_cls_app->ident_ + " function's " + std::to_string(i) + 
+                " argument needs to be of type: " + args->at(i)->getType() +
+                ", provided: " + (e_cls_app->listexpr_->at(i - 1)->type_ == "" ?
+                "undefined" : e_cls_app->listexpr_->at(i - 1)->type_)
+                + "!";
+            CompilerOutput::getInstance().error(e_cls_app->listexpr_->at(i - 1)->line_number_, error);
+
+            return;
+        }
+    }
+
+    e_cls_app->is_lvalue_ = false;
+    e_cls_app->is_always_false_ = false;
+    e_cls_app->is_always_true_ = false;
+    e_cls_app->has_value_ = false;
+    e_cls_app->is_null_ = false;
 }
 
 void SemAnalysisVisitor::visitENeg(ENeg *e_neg)
@@ -1132,10 +1239,16 @@ void SemAnalysisVisitor::visitERel(ERel *e_rel)
             }
         }
 
+        if (e_rel->expr_1->type_ == "string" &&
+            e_rel->expr_2->type_ == "string")
+        {
+            is_ok = true;
+        }
+
         if (!is_ok)
         {
             std::string error = "Relation operation can be performed only using"
-                                " two ints, two booleans or for checking if class is null!";
+                                " two standard type expressions or for checking if class is null!";
             CompilerOutput::getInstance().error(e_rel->expr_1->line_number_, error);
             return;
         }

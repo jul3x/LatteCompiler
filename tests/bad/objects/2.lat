@@ -1,0 +1,11 @@
+class A {
+    int a;
+}
+
+class B extends A {
+    int a;
+}
+
+int main () {
+    return 0;
+}
