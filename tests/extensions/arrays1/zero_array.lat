@@ -1,0 +1,13 @@
+int main() {
+    int[] a = new int[0];
+
+    printInt(a.length);
+
+    for (int x : a)
+    {
+        printInt(x);
+    }
+
+    printString("==");
+    return 0;
+}
